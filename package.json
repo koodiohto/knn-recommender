@@ -1,0 +1,35 @@
+{
+  "name": "knn-recommender",
+  "version": "1.0.0",
+  "description": "k-nearest neighbour based recommender for user item matrices.",
+  "main": "knn-recommender.js",
+  "scripts": {
+    "build": "babel src -s -d dist",
+    "start": "node dist/knn-recommender.js",
+    "buildandrun": "npm run build && node dist/knn-recommender.js",
+    "test": "mocha ./**/*-spec.js --require @babel/register",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "k-nearest",
+    "neighbour",
+    "knn",
+    "recommendation",
+    "recommendation",
+    "engine",
+    "user",
+    "item",
+    "matrix"
+  ],
+  "author": "Ohto Rainio",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.13.10",
+    "@babel/core": "^7.13.10",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/register": "^7.13.8",
+    "chai": "^4.3.4",
+    "mocha": "^8.3.2",
+    "rimraf": "^3.0.2"
+  }
+}
