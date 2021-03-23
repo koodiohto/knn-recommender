@@ -5,21 +5,16 @@
   "main": "knn-recommender.js",
   "scripts": {
     "build": "babel src -s -d dist",
-    "start": "node dist/knn-recommender.js",
+    "run": "node dist/knn-recommender.js",
     "buildandrun": "npm run build && node dist/knn-recommender.js",
     "test": "mocha ./**/*-spec.js --require @babel/register",
     "clean": "rimraf dist"
   },
   "keywords": [
-    "k-nearest",
-    "neighbour",
-    "knn",
-    "recommendation",
-    "recommendation",
-    "engine",
-    "user",
-    "item",
-    "matrix"
+    "k-nearest neighbour",
+    "knn recommendation",
+    "recommendation engine",
+    "user item matrix"
   ],
   "author": "Ohto Rainio",
   "license": "MIT",

@@ -9,6 +9,9 @@ project.lock.json
 /packages
 /TestResults
 
+#exclude babel build
+/dist
+
 appsettings.json
 local.settings.json
 
