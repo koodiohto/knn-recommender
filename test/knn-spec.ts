@@ -1,4 +1,4 @@
-import knnRecommender from '../src/knn-recommender.js';
+import KNNRecommender from '../src/knn-recommender.js';
 import { expect } from 'chai';
 
 
