@@ -12,6 +12,8 @@ project.lock.json
 #exclude babel build
 /dist
 
+.DS_Store
+
 appsettings.json
 local.settings.json
 
