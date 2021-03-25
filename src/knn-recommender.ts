@@ -123,6 +123,7 @@ export default class KNNRecommender {
     public generateXNewRecommendationsForUserId(userId: string,
         amountOfDesiredNewRecommendations: number = 1,
         amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
+        this.checkInitiated()
         return this.generateXNewRecommendationsForUserIdInternal(userId, false,
             amountOfDesiredNewRecommendations,
             amountOfDesiredNearestNeighboursToUse)
@@ -148,6 +149,7 @@ export default class KNNRecommender {
     public generateXNewUniqueRecommendationsForUserId(userId: string,
         amountOfDesiredNewRecommendations: number = 1,
         amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
+        this.checkInitiated()
         return this.generateXNewRecommendationsForUserIdInternal(userId, true,
             amountOfDesiredNewRecommendations,
             amountOfDesiredNearestNeighboursToUse)
