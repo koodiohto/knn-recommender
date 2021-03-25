@@ -3,6 +3,14 @@ type UserSimilarity = {
     similarity: number;
 };
 
+type Recommendation = {
+    itemId: string;
+    recommenderUserId: string;
+    similarityWithRecommender: number;
+};
+
+
+
 export default class KNNRecommender {
 
 
@@ -17,6 +25,11 @@ export default class KNNRecommender {
     } = {}
 
     private userToRowNumberMap: {
+        [key: string]: number,
+    } = {}
+
+    //TODO: initialize this also
+    private itemNameToColumnNumberMap: {
         [key: string]: number,
     } = {}
 
@@ -89,9 +102,121 @@ export default class KNNRecommender {
         return userSimilarities
     }
 
+    /**
+   * Try to generate the desired amount of new recommendations for a user
+   * based on what similar users have liked.
+   * The method starts with the most similar user and collects all the
+   * likings from him/her where the current user hasn't expressed their
+   * preference yet. If the amount of desired recommendations hasn't been
+   * fulfilled yet, it proceededs to the second most similar user and so on.
+   * The method might add the same recommendation twice if an item has been
+   * recommended by several similar users. If you want to have these potential multi recommendations
+   * exluded use the method generateXNewUniqueRecommendationsForUserId instead.
+   * @param userId
+   * @param amountOfDesiredNewRecommendations defaults to 1
+   * @param amountOfDesiredNearestNeighboursToUse defaults to 1
+   * @returns An array containing the recommendations or null's if no recommendations can be generated from the data
+   * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
+   * {itemId: 'item 1', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}
+   * {itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
+   */
+    public generateXNewRecommendationsForUserId(userId: string,
+        amountOfDesiredNewRecommendations: number = 1,
+        amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
+        return this.generateXNewRecommendationsForUserIdInternal(userId, false,
+            amountOfDesiredNewRecommendations,
+            amountOfDesiredNearestNeighboursToUse)
+    }
 
     /**
-     * Get all the recommendations for certain user id.
+      * Try to generate the desired amount of new unique recommendations for a user
+      * based on what similar users have liked.
+      * The method starts with the most similar user and collects all the
+      * likings from him/her where the current user hasn't expressed their
+      * preference yet. If the amount of desired recommendations hasn't been
+      * fulfilled yet, it proceededs to the second most similar user and so on.
+      * The method doesn't add same recommendation twice even if it would be
+      * recommended by several users. If you want to have these potential multi recommendations
+      * included use the method generateXNewRecommendationsForUserId instead.
+      * @param userId
+      * @param amountOfDesiredNewRecommendations defaults to 1
+      * @param amountOfDesiredNearestNeighboursToUse defaults to 1
+      * @returns An array containing the recommendations or null's if no recommendations can be generated from the data
+      * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
+      * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
+      */
+    public generateXNewUniqueRecommendationsForUserId(userId: string,
+        amountOfDesiredNewRecommendations: number = 1,
+        amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
+        return this.generateXNewRecommendationsForUserIdInternal(userId, true,
+            amountOfDesiredNewRecommendations,
+            amountOfDesiredNearestNeighboursToUse)
+    }
+
+
+
+    /**
+     * Try to generate the desired amount of new unique recommendations for a user
+     * based on what similar users have liked.
+     * The method starts with the most similar user and collects all the 
+     * likings from him/her where the current user hasn't expressed their
+     * preference yet. If the amount of desired recommendations hasn't been
+     * fulfilled yet, it proceededs to the second most similar user and so on.
+     * The method doesn't add same recommendation twice even if it would be 
+     * recommended by several users. If you want to have these potential multi recommendations
+     * included use the method generateXNewRecommendationsForUserId instead.
+     * @param userId 
+     * @param onlyUnique
+     * @param amountOfDesiredNewRecommendations defaults to 1
+     * @param amountOfDesiredNearestNeighboursToUse defaults to 1
+     * @returns An array containing the recommendations or null's if no recommendations can be generated from the data
+     * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, 
+     * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
+     */
+    private generateXNewRecommendationsForUserIdInternal(userId: string,
+        onlyUnique: boolean,
+        amountOfDesiredNewRecommendations: number = 1,
+        amountOfDesiredNearestNeighboursToUse: number = 1
+    ): Array<Recommendation> {
+        const userRecommendations = this.getAllRecommendationsForUserId(userId)
+        const userSimilarities = this.getXNearestNeighboursForUserId(userId, amountOfDesiredNearestNeighboursToUse)
+
+        let newRecommendations = new Array<Recommendation>(amountOfDesiredNewRecommendations)
+        let newRecommendationCounter = 0
+
+        //embrace duplicate recommendations, if many similar users have recommended something
+        let recommendationsAlreadyIncluded: {
+            [key: number]: boolean,
+        } = {}
+
+        for (let i = 0; i < userSimilarities.length; i++) {
+            const otherUsersRecommendations = this.getAllRecommendationsForUserId(userSimilarities[i].otherUserId)
+            for (let j = 1; j < userRecommendations.length; j++) {
+                if ((!onlyUnique || !recommendationsAlreadyIncluded[j]) &&
+                    otherUsersRecommendations[j] === 1 && userRecommendations[j] === 0) {//the other user has liked this item and the current user has neither liked/disliked it.
+                    newRecommendations[newRecommendationCounter] = {
+                        itemId: <string>this.userItemMatrix[0][j],
+                        recommenderUserId: userSimilarities[i].otherUserId,
+                        similarityWithRecommender: userSimilarities[i].similarity
+                    }
+                    newRecommendationCounter++
+                    if (newRecommendationCounter >= amountOfDesiredNewRecommendations) {
+                        //We found enough recommendations, stop searching for more.
+                        return newRecommendations
+                    }
+                    recommendationsAlreadyIncluded[j] = true
+                }
+            }
+        }
+
+        return newRecommendations
+    }
+
+    /**
+     * Get all the recommendations for certain user id. 
+     * You can use this method together with getXNearestNeighboursForUserId 
+     * to manually generate recommendations
+     * for one user based on the recommedations of other users.
      * @param userId 
      * @returns e.g. ['user 1', 1, 0, -1, 0]
      */
@@ -102,7 +227,6 @@ export default class KNNRecommender {
         }
         return this.userItemMatrix[rowNumber]
     }
-
 
     private checkInitiated(): void {
         if (!this.initialized) {

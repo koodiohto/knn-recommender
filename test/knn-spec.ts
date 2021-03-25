@@ -17,6 +17,14 @@ const threeUserItemMatrix: any[][] = [
     ['user 3', 1, 0, 0, 1, 0, 1, 0]
 ]
 
+const threeUserItemMatrixForFindingRecommendations: any[][] = [
+    ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
+        'item 5', 'item 6', 'item 7'],
+    ['user 1', 1, -1, 0, 0, -1, 1, 0],
+    ['user 2', 1, -1, 0, 1, -1, 0, 0],
+    ['user 3', 0, -1, 0, 1, -1, 0, 0]
+]
+
 const emptyUserItemMatrix: any[][] = []
 
 const malformattedDataInUserItemMatrix: any[][] = [
@@ -114,6 +122,36 @@ describe('basic test', () => {
         expect(userRecommendations[2]).to.equal(-1);
         expect(userRecommendations[3]).to.equal(0);
 
+    })
+
+    it('should get 3 new unique recommendations correctly for user', () => {
+        const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+        const userRecommendations = kNNRecommender.generateXNewUniqueRecommendationsForUserId('user 3', 3, 2)
+
+        expect(userRecommendations[0].itemId).to.equal('item 1');
+        expect(userRecommendations[0].recommenderUserId).to.equal('user 2');
+        expect(userRecommendations[0].similarityWithRecommender).to.equal(3 / 4);
+        expect(userRecommendations[1].itemId).to.equal('item 6');
+        expect(userRecommendations[1].recommenderUserId).to.equal('user 1');
+        expect(userRecommendations[1].similarityWithRecommender).to.equal(2 / 5);
+        expect(userRecommendations[2]).to.equal(undefined);
+    })
+
+    it('should get 3 new (not unique) recommendations correctly for user', () => {
+        const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+        const userRecommendations = kNNRecommender.generateXNewRecommendationsForUserId('user 3', 3, 2)
+
+        expect(userRecommendations[0].itemId).to.equal('item 1');
+        expect(userRecommendations[0].recommenderUserId).to.equal('user 2');
+        expect(userRecommendations[0].similarityWithRecommender).to.equal(3 / 4);
+        expect(userRecommendations[1].itemId).to.equal('item 1');
+        expect(userRecommendations[1].recommenderUserId).to.equal('user 1');
+        expect(userRecommendations[1].similarityWithRecommender).to.equal(2 / 5);
+        expect(userRecommendations[2].itemId).to.equal('item 6');
+        expect(userRecommendations[2].recommenderUserId).to.equal('user 1');
+        expect(userRecommendations[2].similarityWithRecommender).to.equal(2 / 5);
     })
 
     it('should fail gracefully with empty', () => {
