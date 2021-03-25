@@ -41,7 +41,18 @@ export default class KNNRecommender {
      * @param userItemMatrix = [['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]
      */
     constructor(userItemMatrix: string | number[][]) {
+        this.checkUserItemMatrix(userItemMatrix)
         this.userItemMatrix = userItemMatrix
+    }
+
+    private checkUserItemMatrix(userItemMatrix: string | number[][]) {
+        if (!userItemMatrix || userItemMatrix.length < 2 || !userItemMatrix[0] || userItemMatrix[0].length < 2 ||
+            (typeof userItemMatrix[0][1] !== "string") || (typeof userItemMatrix[1][0] !== "string") ||
+            (typeof userItemMatrix[1][1] !== "number")) {
+            throw new TypeError(`Malformatted user item matrix. ` +
+                `It should be a non zero two dimensional array in the format ` +
+                `[['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]`)
+        }
     }
 
     /**
@@ -92,16 +103,16 @@ export default class KNNRecommender {
                 let similarRatings = 0
                 let ratingsDoneByEitherUser = 0
                 for (let j = 1; j < columns; j++) {//first column contains the user name, start with second
-                    if (this.userItemMatrix[i][j] !== 0 && this.userItemMatrix[i][j] === this.userItemMatrix[i2][j]) {
-                        similarRatings++
-                        ratingsDoneByEitherUser++
-                    } else if (this.userItemMatrix[i][j] !== 0 || this.userItemMatrix[i2][j] !== 0) {
-                        ratingsDoneByEitherUser++
-                    } else if (this.userItemMatrix[i][j] !== -1 && this.userItemMatrix[i][j] !== 0
+                    if (this.userItemMatrix[i][j] !== -1 && this.userItemMatrix[i][j] !== 0
                         && this.userItemMatrix[i][j] !== 1) {
                         throw new RangeError(`Element in user item matrix was invalid, either not a` +
                             ` number at all or not a -1, 0, or 1. The invalid value  ` +
                             `at index [${i}][${j}] is: ${this.userItemMatrix[i][j]}`)
+                    } else if (this.userItemMatrix[i][j] !== 0 && this.userItemMatrix[i][j] === this.userItemMatrix[i2][j]) {
+                        similarRatings++
+                        ratingsDoneByEitherUser++
+                    } else if (this.userItemMatrix[i][j] !== 0 || this.userItemMatrix[i2][j] !== 0) {
+                        ratingsDoneByEitherUser++
                     }
                 }
                 let jaccardSimilarity = similarRatings / ratingsDoneByEitherUser
