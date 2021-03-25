@@ -104,8 +104,25 @@ describe('basic test', () => {
         expect(user3ToOtherUsersArray[1].similarity).to.equal(2 / 5);
     })
 
+    it('should get all the recommendations for user correctly', () => {
+        const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+        const userRecommendations = kNNRecommender.getAllRecommendationsForUserId('user 2')
+
+        expect(userRecommendations[0]).to.equal('user 2');
+        expect(userRecommendations[1]).to.equal(1);
+        expect(userRecommendations[2]).to.equal(-1);
+        expect(userRecommendations[3]).to.equal(0);
+
+    })
+
     it('should fail gracefully with empty', () => {
         expect(() => new KNNRecommender(emptyUserItemMatrix)).to.throw()
+    })
+
+    it('should fail gracefully when not initiated', () => {
+        const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
+        expect(() => kNNRecommender.getXNearestNeighboursForUserId('user 1', 1)).to.throw()
     })
 
     it('should fail gracefully with malformatted data in user item matrix', () => {

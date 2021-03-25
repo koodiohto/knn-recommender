@@ -21,6 +21,8 @@ export default class KNNRecommender {
     } = {}
 
 
+    private initialized = false
+
     /**
      * Takes a user item matrix of size x*y where
      * x[0] column represents the user id's and 
@@ -64,6 +66,7 @@ export default class KNNRecommender {
      */
     public initializeKNNRecommenderForZeroOneUserMatrix(): void {
         this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowMap()
+        this.initialized = true
     }
 
     /**
@@ -77,6 +80,7 @@ export default class KNNRecommender {
      */
     public getXNearestNeighboursForUserId(userId: string, amountOfDesiredNeighbours: number = -1):
         Array<UserSimilarity> {
+        this.checkInitiated()
         let userSimilarities: Array<UserSimilarity> = this.userToUserSimilarityMap[userId]
 
         if (amountOfDesiredNeighbours !== -1 && userSimilarities.length > amountOfDesiredNeighbours) {
@@ -85,6 +89,26 @@ export default class KNNRecommender {
         return userSimilarities
     }
 
+
+    /**
+     * Get all the recommendations for certain user id.
+     * @param userId 
+     * @returns e.g. ['user 1', 1, 0, -1, 0]
+     */
+    public getAllRecommendationsForUserId(userId: string): string | number[] {
+        const rowNumber = this.userToRowNumberMap[userId]
+        if (!rowNumber) {
+            throw new Error('Invalid user id')
+        }
+        return this.userItemMatrix[rowNumber]
+    }
+
+
+    private checkInitiated(): void {
+        if (!this.initialized) {
+            throw new Error("Recommender not initialized!")
+        }
+    }
     /**
      * This is a heavy (roughly: O(n^3) + O(n * log(n)) operation. 
      */
