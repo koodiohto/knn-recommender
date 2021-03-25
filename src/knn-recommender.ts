@@ -58,17 +58,17 @@ export default class KNNRecommender {
     /**
      * Returns a sorted list of the x most similar users to the given userId. 
      * The elements in the list contain objects in the form {otherUserId, similarity}.
-     * E.g. [{otherUserId: 'User 2', similarity: 0.53}]
+     * E.g. [{otherUserId: 'User 2', similarity: 0.53}, {otherUserId: 'User 3', similarity: 0.4}]
      * 
      * @param userId 
-     * @param amountOfDesiredNeighbours 
+     * @param amountOfDesiredNeighbours if not specified get similarity with all other users.
      * @returns 
      */
-    public getXNearestNeighboursForUserId(userId: string, amountOfDesiredNeighbours: number):
+    public getXNearestNeighboursForUserId(userId: string, amountOfDesiredNeighbours: number = -1):
         Array<UserSimilarity> {
         let userSimilarities: Array<UserSimilarity> = this.userToUserSimilarityMap[userId]
 
-        if (userSimilarities.length > amountOfDesiredNeighbours) {
+        if (amountOfDesiredNeighbours !== -1 && userSimilarities.length > amountOfDesiredNeighbours) {
             return userSimilarities.slice(0, amountOfDesiredNeighbours);
         }
         return userSimilarities
@@ -82,7 +82,8 @@ export default class KNNRecommender {
         const columns = this.userItemMatrix[0].length
 
         for (let i = 1; i < rows; i++) {//first row is item names, start with second row
-            let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 1)
+            let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 2)
+            let userToOtherUsersCounter = 0
             //Go through all the rows to match the user with all the rest of the users
             for (let i2 = 1; i2 < rows; i2++) {
                 if (i === i2) {//don't compare the user to themself
@@ -111,7 +112,8 @@ export default class KNNRecommender {
                         `The invalid element is: ${this.userItemMatrix[i2][0]}`)
                 }
 
-                userToOtherUsersSimilarityList[i - 1] = { otherUserId: <string>this.userItemMatrix[i2][0], similarity: jaccardSimilarity }
+                userToOtherUsersSimilarityList[userToOtherUsersCounter] = { otherUserId: <string>this.userItemMatrix[i2][0], similarity: jaccardSimilarity }
+                userToOtherUsersCounter++
             }
             if (typeof this.userItemMatrix[i][0] !== "string") {
                 throw new TypeError(`Malformatted user item matrix. Element at` +
@@ -119,11 +121,12 @@ export default class KNNRecommender {
                     `The invalid element is: ${this.userItemMatrix[i][0]}`)
             }
             this.userToRowNumberMap[this.userItemMatrix[i][0]] = i
-            this.userToUserSimilarityMap[this.userItemMatrix[i][0]] = this.sortUserToOtherUsersSimilarityListByUserToUserSimilarity(userToOtherUsersSimilarityList)
+            this.userToUserSimilarityMap[this.userItemMatrix[i][0]] = this.sortUserToOtherUsersSimilarityListByUserToUserSimilarityDescending(userToOtherUsersSimilarityList)
+
         }
     }
 
-    private sortUserToOtherUsersSimilarityListByUserToUserSimilarity(userToOtherUsersSimilarityList: Array<UserSimilarity>): Array<UserSimilarity> {
-        return userToOtherUsersSimilarityList.sort((a, b) => (a.similarity > b.similarity) ? 1 : -1)
+    private sortUserToOtherUsersSimilarityListByUserToUserSimilarityDescending(userToOtherUsersSimilarityList: Array<UserSimilarity>): Array<UserSimilarity> {
+        return userToOtherUsersSimilarityList.sort((a, b) => (a.similarity > b.similarity) ? -1 : 1)
     }
 }
