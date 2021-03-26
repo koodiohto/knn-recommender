@@ -154,6 +154,21 @@ describe('basic test', () => {
         expect(userRecommendations[2].similarityWithRecommender).to.equal(2 / 5);
     })
 
+    it('should update item for user correctly', () => {
+        const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+
+        const userRecommendationsBefore = kNNRecommender.getAllRecommendationsForUserId('user 1')
+        expect(userRecommendationsBefore[0]).to.equal('user 1');
+        expect(userRecommendationsBefore[2]).to.equal(-1);
+
+        kNNRecommender.updateUserItemMatrixForUserId('user 1', 'item 2', 1)
+
+        const userRecommendationsAfter = kNNRecommender.getAllRecommendationsForUserId('user 1')
+        expect(userRecommendationsAfter[0]).to.equal('user 1');
+        expect(userRecommendationsAfter[2]).to.equal(1);
+    })
+
     it('should fail gracefully with empty', () => {
         expect(() => new KNNRecommender(emptyUserItemMatrix)).to.throw()
     })
@@ -172,12 +187,12 @@ describe('basic test', () => {
         expect(() => new KNNRecommender(malformattedUserIdANumber)).to.throw()
     })
 
-    it('should fail gracefully with other than first user id being a number ', () => {
+    it('should fail gracefully with other than first user id being a number', () => {
         const kNNRecommender = new KNNRecommender(malformattedSecondUserIdANumber)
         expect(() => kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()).to.throw();
     })
 
-    it('should fail gracefully with malformatted item name ', () => {
+    it('should fail gracefully with malformatted item name', () => {
         expect(() => new KNNRecommender(malformattedItemName)).to.throw()
     })
 

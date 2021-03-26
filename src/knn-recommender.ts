@@ -14,7 +14,7 @@ type Recommendation = {
 export default class KNNRecommender {
 
 
-    private userItemMatrix: string | number[][]
+    private userItemMatrix: Array<Array<string | number>>
 
     private userToUserSimilarityMap: {
         [key: string]: Array<UserSimilarity>,
@@ -50,12 +50,12 @@ export default class KNNRecommender {
      * that at least one of the two users has either liked or disliked.
      * @param userItemMatrix = [['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]
      */
-    constructor(userItemMatrix: string | number[][]) {
+    constructor(userItemMatrix: Array<Array<string | number>>) {
         this.checkUserItemMatrix(userItemMatrix)
         this.userItemMatrix = userItemMatrix
     }
 
-    private checkUserItemMatrix(userItemMatrix: string | number[][]) {
+    private checkUserItemMatrix(userItemMatrix: Array<Array<string | number>>) {
         if (!userItemMatrix || userItemMatrix.length < 2 || !userItemMatrix[0] || userItemMatrix[0].length < 2 ||
             (typeof userItemMatrix[0][1] !== "string") || (typeof userItemMatrix[1][0] !== "string") ||
             (typeof userItemMatrix[1][1] !== "number")) {
@@ -73,7 +73,7 @@ export default class KNNRecommender {
      * thus this is not threaded here.
      */
     public initializeKNNRecommenderForZeroOneUserMatrix(): void {
-        this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowMap()
+        this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap()
         this.initialized = true
     }
 
@@ -119,7 +119,7 @@ export default class KNNRecommender {
         amountOfDesiredNewRecommendations: number = 1,
         amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
         this.checkInitiated()
-        return this.generateXNewRecommendationsForUserIdInternal(userId, false,
+        return this.generateNNewRecommendationsForUserIdInternal(userId, false,
             amountOfDesiredNewRecommendations,
             amountOfDesiredNearestNeighboursToUse)
     }
@@ -145,11 +145,36 @@ export default class KNNRecommender {
         amountOfDesiredNewRecommendations: number = 1,
         amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
         this.checkInitiated()
-        return this.generateXNewRecommendationsForUserIdInternal(userId, true,
+        return this.generateNNewRecommendationsForUserIdInternal(userId, true,
             amountOfDesiredNewRecommendations,
             amountOfDesiredNearestNeighboursToUse)
     }
 
+
+    /**
+     * Update the liking value for a certain user and item.
+     * NOTE: This method does not invoke an automatic recalculation of the 
+     * user similarities. You need to tricker that manually if you wish.
+     * @param userId 
+     * @param itemId 
+     * @param value -1, 0 or 1
+     */
+    public updateUserItemMatrixForUserId(userId: string, itemId: string, value: number) {
+        if (!this.userToRowNumberMap[userId] || !this.itemNameToColumnNumberMap[itemId]) {
+            throw new Error("userId or itemId not valid when updating user's value")
+        }
+        this.userItemMatrix[this.userToRowNumberMap[userId]][this.itemNameToColumnNumberMap[itemId]] = value
+    }
+
+    //TODO:
+    public addNewRowToDataset(userRow: string | number[]) {
+
+    }
+
+    //TODO:
+    public addNewItemToDataset(itemName: string) {
+
+    }
 
 
     /**
@@ -170,7 +195,7 @@ export default class KNNRecommender {
      * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, 
      * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
      */
-    private generateXNewRecommendationsForUserIdInternal(userId: string,
+    private generateNNewRecommendationsForUserIdInternal(userId: string,
         onlyUnique: boolean,
         amountOfDesiredNewRecommendations: number = 1,
         amountOfDesiredNearestNeighboursToUse: number = 1
@@ -217,7 +242,7 @@ export default class KNNRecommender {
      * @param userId 
      * @returns e.g. ['user 1', 1, 0, -1, 0]
      */
-    public getAllRecommendationsForUserId(userId: string): string | number[] {
+    public getAllRecommendationsForUserId(userId: string): Array<string | number> {
         const rowNumber = this.userToRowNumberMap[userId]
         if (!rowNumber) {
             throw new Error('Invalid user id')
@@ -233,9 +258,11 @@ export default class KNNRecommender {
     /**
      * This is a heavy (roughly: O(n^3) + O(n * log(n)) operation. 
      */
-    private calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowMap(): void {
+    private calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(): void {
         const rows = this.userItemMatrix.length
         const columns = this.userItemMatrix[0].length
+
+        let itemNameToColumnNumberMapInitiated = false
 
         for (let i = 1; i < rows; i++) {//first row is item names, start with second row
             let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 2)
@@ -248,6 +275,9 @@ export default class KNNRecommender {
                 let similarRatings = 0
                 let ratingsDoneByEitherUser = 0
                 for (let j = 1; j < columns; j++) {//first column contains the user name, start with second
+                    if (!itemNameToColumnNumberMapInitiated) {
+                        this.itemNameToColumnNumberMap[<string>this.userItemMatrix[0][j]] = j
+                    }
                     if (this.userItemMatrix[i][j] !== -1 && this.userItemMatrix[i][j] !== 0
                         && this.userItemMatrix[i][j] !== 1) {
                         throw new RangeError(`Element in user item matrix was invalid, either not a` +
@@ -260,6 +290,7 @@ export default class KNNRecommender {
                         ratingsDoneByEitherUser++
                     }
                 }
+                itemNameToColumnNumberMapInitiated = true // initiate this only once on the first run
                 let jaccardSimilarity = similarRatings / ratingsDoneByEitherUser
 
                 if (typeof this.userItemMatrix[i2][0] !== "string") {
