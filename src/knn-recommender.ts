@@ -13,7 +13,6 @@ type Recommendation = {
 
 export default class KNNRecommender {
 
-
     private userItemMatrix: Array<Array<string | number>>
 
     private userToUserSimilarityMap: {
@@ -24,8 +23,7 @@ export default class KNNRecommender {
         [key: string]: number,
     } = {}
 
-    //TODO: initialize this also
-    private itemNameToColumnNumberMap: {
+    private itemIdToColumnNumberMap: {
         [key: string]: number,
     } = {}
 
@@ -162,10 +160,11 @@ export default class KNNRecommender {
      * @param value -1, 0 or 1
      */
     public updateUserItemMatrixForUserId(userId: string, itemId: string, value: number) {
-        if (!this.userToRowNumberMap[userId] || !this.itemNameToColumnNumberMap[itemId]) {
+        this.checkInitiated()
+        if (!this.userToRowNumberMap[userId] || !this.itemIdToColumnNumberMap[itemId]) {
             throw new Error("userId or itemId not valid when updating user's value")
         }
-        this.userItemMatrix[this.userToRowNumberMap[userId]][this.itemNameToColumnNumberMap[itemId]] = value
+        this.userItemMatrix[this.userToRowNumberMap[userId]][this.itemIdToColumnNumberMap[itemId]] = value
     }
 
     /**
@@ -184,9 +183,19 @@ export default class KNNRecommender {
         this.userItemMatrix.push(userRow)
     }
 
-    //TODO:
-    public addNewItemToDataset(itemName: string) {
-
+    /**
+     * Add a new item to the user item matrix and initalize all user recommendations
+     * with value 0 for the new item.
+     * NOTE: This method does not invoke an automatic recalculation of the
+     * user similarities. You need to tricker that manually if you wish by running
+     * initializeKNNRecommenderForZeroOneUserMatrix-method
+     * @param itemId 
+     */
+    public addNewItemToDataset(itemId: string) {
+        this.userItemMatrix[0].push(itemId)
+        for (let i = 1; i < this.userItemMatrix.length; i++) {//initialize all user recommendations with zeros for the new item
+            this.userItemMatrix[i].push(0)
+        }
     }
 
 
@@ -275,7 +284,7 @@ export default class KNNRecommender {
         const rows = this.userItemMatrix.length
         const columns = this.userItemMatrix[0].length
 
-        let itemNameToColumnNumberMapInitiated = false
+        let itemIdToColumnNumberMapInitiated = false
 
         for (let i = 1; i < rows; i++) {//first row is item names, start with second row
             let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 2)
@@ -288,8 +297,8 @@ export default class KNNRecommender {
                 let similarRatings = 0
                 let ratingsDoneByEitherUser = 0
                 for (let j = 1; j < columns; j++) {//first column contains the user name, start with second
-                    if (!itemNameToColumnNumberMapInitiated) {
-                        this.itemNameToColumnNumberMap[<string>this.userItemMatrix[0][j]] = j
+                    if (!itemIdToColumnNumberMapInitiated) {
+                        this.itemIdToColumnNumberMap[<string>this.userItemMatrix[0][j]] = j
                     }
                     if (this.userItemMatrix[i][j] !== -1 && this.userItemMatrix[i][j] !== 0
                         && this.userItemMatrix[i][j] !== 1) {
@@ -303,7 +312,7 @@ export default class KNNRecommender {
                         ratingsDoneByEitherUser++
                     }
                 }
-                itemNameToColumnNumberMapInitiated = true // initiate this only once on the first run
+                itemIdToColumnNumberMapInitiated = true // initiate this only once on the first run
                 let jaccardSimilarity = similarRatings / ratingsDoneByEitherUser
 
                 if (typeof this.userItemMatrix[i2][0] !== "string") {

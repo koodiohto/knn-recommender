@@ -173,16 +173,31 @@ describe('basic test', () => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
         kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
 
-        kNNRecommender.addNewRowToDataset(['user 4', 1, 0, 1, 1, 0, 0, 0])
+        kNNRecommender.addNewRowToDataset(['user 3', 1, 0, 1, 1, 0, 0, 0])
 
         kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
 
-        const userRecommendationsAfter = kNNRecommender.getAllRecommendationsForUserId('user 4')
-        expect(userRecommendationsAfter[0]).to.equal('user 4');
+        const userRecommendationsAfter = kNNRecommender.getAllRecommendationsForUserId('user 3')
+        expect(userRecommendationsAfter[0]).to.equal('user 3');
         expect(userRecommendationsAfter[1]).to.equal(1);
         expect(userRecommendationsAfter[2]).to.equal(0);
 
     })
+
+    it('should add new item correctly', () => {
+        const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+
+        const userRecommendationsBefore = kNNRecommender.getAllRecommendationsForUserId('user 2')
+        expect(userRecommendationsBefore[8]).to.equal(undefined);
+
+        kNNRecommender.addNewItemToDataset('item 8')
+
+        const userRecommendationsAfter = kNNRecommender.getAllRecommendationsForUserId('user 2')
+        expect(userRecommendationsAfter[0]).to.equal('user 2');
+        expect(userRecommendationsAfter[8]).to.equal(0);
+    })
+
 
 
     it('should fail gracefully with empty', () => {
