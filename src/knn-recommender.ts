@@ -179,6 +179,9 @@ export default class KNNRecommender {
             throw new Error("The user row to be added doesn't have the same amount of columns as the current user item matrix")
         } else if (typeof userRow[0] != "string" || typeof userRow[1] != "number") {
             throw new Error("The user row to be added isn't in the correct format that should be ['user id', 0, 1, ...]")
+        } else if (this.userToRowNumberMap[userRow[0]]) {
+            throw new Error(`A row for the given userid: ${userRow[0]} already exists in the user item matrix. Can't add a second row for the same user id. `)
+
         }
         this.userItemMatrix.push(userRow)
     }
