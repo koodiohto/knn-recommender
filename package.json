@@ -19,6 +19,8 @@
   "author": "Ohto Rainio",
   "license": "MIT",
   "devDependencies": {
+    "typescript": "4.2.3",
+    "web-worker": "1.0.0",
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.2",
     "chai": "^4.3.4",
@@ -27,7 +29,5 @@
     "ts-node": "^9.1.1",
     "typings": "^2.1.1"
   },
-  "dependencies": {
-    "typescript": "4.2.3"
-  }
+  "dependencies": {}
 }
