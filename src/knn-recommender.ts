@@ -67,7 +67,7 @@ export default class KNNRecommender {
 
     /**
      * Do the time consuming initializations. 
-     * This is a heavy O(n^3) + O(n) operation, so it's recommended
+     * This is a heavy O(n^3) + O(n * log(n)) operation, so it's recommended
      * to run it in a thread provided by your running environment.
      * This library tries to be agnostic to the Javascript engine used and 
      * thus this is not threaded here.
