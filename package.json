@@ -1,0 +1,33 @@
+{
+  "name": "knn-recommender",
+  "version": "1.0.0",
+  "description": "k-nearest neighbour based recommender for user item matrices.",
+  "main": "knn-recommender.js",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "node dist/knn-recommender.js",
+    "buildandstart": "npm run build && node dist/knn-recommender.js",
+    "test": "mocha -r ts-node/register ./**/*-spec.ts",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "k-nearest neighbour",
+    "knn recommendation",
+    "recommendation engine",
+    "user item matrix"
+  ],
+  "author": "Ohto Rainio",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chai": "^4.2.15",
+    "@types/mocha": "^8.2.2",
+    "chai": "^4.3.4",
+    "mocha": "^8.3.2",
+    "rimraf": "^3.0.2",
+    "ts-node": "^9.1.1",
+    "typings": "^2.1.1"
+  },
+  "dependencies": {
+    "typescript": "4.2.3"
+  }
+}
