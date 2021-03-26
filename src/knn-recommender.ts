@@ -107,15 +107,15 @@ export default class KNNRecommender {
    * exluded use the method generateNNewUniqueRecommendationsForUserId instead.
    * @param userId
    * @param amountOfDesiredNewRecommendations defaults to 1
-   * @param amountOfDesiredNearestNeighboursToUse defaults to 1
-   * @returns An array containing the recommendations or null's if no recommendations can be generated from the data
+   * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+   * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
    * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
    * {itemId: 'item 1', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}
    * {itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
    */
     public generateNNewRecommendationsForUserId(userId: string,
         amountOfDesiredNewRecommendations: number = 1,
-        amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
+        amountOfDesiredNearestNeighboursToUse: number = 3): Array<Recommendation> {
         this.checkInitiated()
         return this.generateNNewRecommendationsForUserIdInternal(userId, false,
             amountOfDesiredNewRecommendations,
@@ -134,14 +134,14 @@ export default class KNNRecommender {
       * included use the method generateNNewRecommendationsForUserId instead.
       * @param userId
       * @param amountOfDesiredNewRecommendations defaults to 1
-      * @param amountOfDesiredNearestNeighboursToUse defaults to 1
-      * @returns An array containing the recommendations or null's if no recommendations can be generated from the data
+      * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+      * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
       * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
       * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
       */
     public generateNNewUniqueRecommendationsForUserId(userId: string,
         amountOfDesiredNewRecommendations: number = 1,
-        amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
+        amountOfDesiredNearestNeighboursToUse: number = 3): Array<Recommendation> {
         this.checkInitiated()
         return this.generateNNewRecommendationsForUserIdInternal(userId, true,
             amountOfDesiredNewRecommendations,
@@ -181,7 +181,6 @@ export default class KNNRecommender {
             throw new Error("The user row to be added isn't in the correct format that should be ['user id', 0, 1, ...]")
         } else if (this.userToRowNumberMap[userRow[0]]) {
             throw new Error(`A row for the given userid: ${userRow[0]} already exists in the user item matrix. Can't add a second row for the same user id. `)
-
         }
         this.userItemMatrix.push(userRow)
     }
@@ -215,15 +214,15 @@ export default class KNNRecommender {
      * @param userId 
      * @param onlyUnique
      * @param amountOfDesiredNewRecommendations defaults to 1
-     * @param amountOfDesiredNearestNeighboursToUse defaults to 1
-     * @returns An array containing the recommendations or null's if no recommendations can be generated from the data
+     * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+     * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
      * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, 
      * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
      */
     private generateNNewRecommendationsForUserIdInternal(userId: string,
         onlyUnique: boolean,
         amountOfDesiredNewRecommendations: number = 1,
-        amountOfDesiredNearestNeighboursToUse: number = 1
+        amountOfDesiredNearestNeighboursToUse: number = 3
     ): Array<Recommendation> {
         const userRecommendations = this.getAllRecommendationsForUserId(userId)
         const userSimilarities = this.getNNearestNeighboursForUserId(userId, amountOfDesiredNearestNeighboursToUse)
@@ -289,6 +288,9 @@ export default class KNNRecommender {
 
         let itemIdToColumnNumberMapInitiated = false
 
+        this.userToRowNumberMap = {} //reinitialize these
+        this.itemIdToColumnNumberMap = {}
+
         for (let i = 1; i < rows; i++) {//first row is item names, start with second row
             let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 2)
             let userToOtherUsersCounter = 0
@@ -331,10 +333,12 @@ export default class KNNRecommender {
                 throw new TypeError(`Malformatted user item matrix. Element at` +
                     `at index [${i}][${0}] is not a string (describing a userid). ` +
                     `The invalid element is: ${this.userItemMatrix[i][0]}`)
+            } else if (this.userToRowNumberMap[this.userItemMatrix[i][0]]) {
+                throw new Error(`Malformatted user item matrix. The matrix contains two users with the same id: ${this.userItemMatrix[i][0]}`)
             }
+
             this.userToRowNumberMap[this.userItemMatrix[i][0]] = i
             this.userToUserSimilarityMap[this.userItemMatrix[i][0]] = this.sortUserToOtherUsersSimilarityListByUserToUserSimilarityDescending(userToOtherUsersSimilarityList)
-
         }
     }
 

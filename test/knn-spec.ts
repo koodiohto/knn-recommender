@@ -27,6 +27,13 @@ const threeUserItemMatrixForFindingRecommendations: any[][] = [
 
 const emptyUserItemMatrix: any[][] = []
 
+const malformattedUserItemMatrixWithTwoSameUserIds: any[][] = [
+    ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
+        'item 5', 'item 6', 'item 7'],
+    ['user 1', 1, -1, 0, 0, -1, 1, 0],
+    ['user 1', 1, -1, 0, 1, -1, 0, 0]
+]
+
 const malformattedDataInUserItemMatrix: any[][] = [
     ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
         'item 5', 'item 6', 'item 7'],
@@ -182,6 +189,10 @@ describe('basic test', () => {
         expect(userRecommendationsAfter[1]).to.equal(1);
         expect(userRecommendationsAfter[2]).to.equal(0);
 
+        const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3')
+        expect(userRecommendations[0].itemId).to.equal('item 2');
+
+        expect(() => kNNRecommender.addNewRowToDataset(['user 3', 1, 0, 1, 1, 0, 0, 0])).to.throw()
     })
 
     it('should add new item correctly', () => {
@@ -198,10 +209,13 @@ describe('basic test', () => {
         expect(userRecommendationsAfter[8]).to.equal(0);
     })
 
-
-
     it('should fail gracefully with empty', () => {
         expect(() => new KNNRecommender(emptyUserItemMatrix)).to.throw()
+    })
+
+    it('should fail gracefully with two same user ids in the data', () => {
+        const kNNRecommender = new KNNRecommender(malformattedUserItemMatrixWithTwoSameUserIds)
+        expect(() => kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()).to.throw()
     })
 
     it('should fail gracefully when not initiated', () => {
