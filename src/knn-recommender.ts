@@ -230,7 +230,7 @@ export default class KNNRecommender {
         let newRecommendations = new Array<Recommendation>(amountOfDesiredNewRecommendations)
         let newRecommendationCounter = 0
 
-        //embrace duplicate recommendations, if many similar users have recommended something
+        //embrace duplicate recommendations (several similar users have recommended something)
         let recommendationsAlreadyIncluded: {
             [key: number]: boolean,
         } = {}
