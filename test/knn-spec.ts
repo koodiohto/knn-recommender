@@ -81,7 +81,7 @@ describe('basic test', () => {
     it('should get the first similar user correctly', () => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
         kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
-        const userToOtherUsersArray = kNNRecommender.getXNearestNeighboursForUserId('user 1', 1)
+        const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
         expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
         expect(userToOtherUsersArray[0].similarity).to.equal(3 / 5);
@@ -90,21 +90,21 @@ describe('basic test', () => {
     it('should get the similarities for three users correctly', () => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrix)
         kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
-        const user1ToOtherUsersArray = kNNRecommender.getXNearestNeighboursForUserId('user 1', 2)
+        const user1ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 2)
 
         expect(user1ToOtherUsersArray[0].otherUserId).to.equal('user 2');
         expect(user1ToOtherUsersArray[0].similarity).to.equal(3 / 5);
         expect(user1ToOtherUsersArray[1].otherUserId).to.equal('user 3');
         expect(user1ToOtherUsersArray[1].similarity).to.equal(2 / 5);
 
-        const user2ToOtherUsersArray = kNNRecommender.getXNearestNeighboursForUserId('user 2')
+        const user2ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 2')
 
         expect(user2ToOtherUsersArray[0].otherUserId).to.equal('user 1');
         expect(user2ToOtherUsersArray[0].similarity).to.equal(3 / 5);
         expect(user2ToOtherUsersArray[1].otherUserId).to.equal('user 3');
         expect(user2ToOtherUsersArray[1].similarity).to.equal(2 / 5);
 
-        const user3ToOtherUsersArray = kNNRecommender.getXNearestNeighboursForUserId('user 3')
+        const user3ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 3')
 
         expect(user3ToOtherUsersArray[0].otherUserId).to.equal('user 1');
         expect(user3ToOtherUsersArray[0].similarity).to.equal(2 / 5);
@@ -127,7 +127,7 @@ describe('basic test', () => {
     it('should get 3 new unique recommendations correctly for user', () => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
         kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
-        const userRecommendations = kNNRecommender.generateXNewUniqueRecommendationsForUserId('user 3', 3, 2)
+        const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', 3, 2)
 
         expect(userRecommendations[0].itemId).to.equal('item 1');
         expect(userRecommendations[0].recommenderUserId).to.equal('user 2');
@@ -141,7 +141,7 @@ describe('basic test', () => {
     it('should get 3 new (not unique) recommendations correctly for user', () => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
         kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
-        const userRecommendations = kNNRecommender.generateXNewRecommendationsForUserId('user 3', 3, 2)
+        const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 3', 3, 2)
 
         expect(userRecommendations[0].itemId).to.equal('item 1');
         expect(userRecommendations[0].recommenderUserId).to.equal('user 2');
@@ -160,7 +160,7 @@ describe('basic test', () => {
 
     it('should fail gracefully when not initiated', () => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
-        expect(() => kNNRecommender.getXNearestNeighboursForUserId('user 1', 1)).to.throw()
+        expect(() => kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)).to.throw()
     })
 
     it('should fail gracefully with malformatted data in user item matrix', () => {

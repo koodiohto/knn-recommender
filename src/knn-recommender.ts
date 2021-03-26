@@ -16,10 +16,6 @@ export default class KNNRecommender {
 
     private userItemMatrix: string | number[][]
 
-    //TODO:
-    //private userItemMatrixNewAdditions: string | number[][]
-
-
     private userToUserSimilarityMap: {
         [key: string]: Array<UserSimilarity>,
     } = {}
@@ -32,7 +28,6 @@ export default class KNNRecommender {
     private itemNameToColumnNumberMap: {
         [key: string]: number,
     } = {}
-
 
     private initialized = false
 
@@ -83,7 +78,7 @@ export default class KNNRecommender {
     }
 
     /**
-     * Returns a sorted list of the x most similar users to the given userId. 
+     * Returns a sorted list of the n most similar users to the given userId. 
      * The elements in the list contain objects in the form {otherUserId, similarity}.
      * E.g. [{otherUserId: 'User 2', similarity: 0.53}, {otherUserId: 'User 3', similarity: 0.4}]
      * 
@@ -91,7 +86,7 @@ export default class KNNRecommender {
      * @param amountOfDesiredNeighbours if not specified get similarity with all other users.
      * @returns 
      */
-    public getXNearestNeighboursForUserId(userId: string, amountOfDesiredNeighbours: number = -1):
+    public getNNearestNeighboursForUserId(userId: string, amountOfDesiredNeighbours: number = -1):
         Array<UserSimilarity> {
         this.checkInitiated()
         let userSimilarities: Array<UserSimilarity> = this.userToUserSimilarityMap[userId]
@@ -111,7 +106,7 @@ export default class KNNRecommender {
    * fulfilled yet, it proceededs to the second most similar user and so on.
    * The method might add the same recommendation twice if an item has been
    * recommended by several similar users. If you want to have these potential multi recommendations
-   * exluded use the method generateXNewUniqueRecommendationsForUserId instead.
+   * exluded use the method generateNNewUniqueRecommendationsForUserId instead.
    * @param userId
    * @param amountOfDesiredNewRecommendations defaults to 1
    * @param amountOfDesiredNearestNeighboursToUse defaults to 1
@@ -120,7 +115,7 @@ export default class KNNRecommender {
    * {itemId: 'item 1', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}
    * {itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
    */
-    public generateXNewRecommendationsForUserId(userId: string,
+    public generateNNewRecommendationsForUserId(userId: string,
         amountOfDesiredNewRecommendations: number = 1,
         amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
         this.checkInitiated()
@@ -138,7 +133,7 @@ export default class KNNRecommender {
       * fulfilled yet, it proceededs to the second most similar user and so on.
       * The method doesn't add same recommendation twice even if it would be
       * recommended by several users. If you want to have these potential multi recommendations
-      * included use the method generateXNewRecommendationsForUserId instead.
+      * included use the method generateNNewRecommendationsForUserId instead.
       * @param userId
       * @param amountOfDesiredNewRecommendations defaults to 1
       * @param amountOfDesiredNearestNeighboursToUse defaults to 1
@@ -146,7 +141,7 @@ export default class KNNRecommender {
       * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
       * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
       */
-    public generateXNewUniqueRecommendationsForUserId(userId: string,
+    public generateNNewUniqueRecommendationsForUserId(userId: string,
         amountOfDesiredNewRecommendations: number = 1,
         amountOfDesiredNearestNeighboursToUse: number = 1): Array<Recommendation> {
         this.checkInitiated()
@@ -166,7 +161,7 @@ export default class KNNRecommender {
      * fulfilled yet, it proceededs to the second most similar user and so on.
      * The method doesn't add same recommendation twice even if it would be 
      * recommended by several users. If you want to have these potential multi recommendations
-     * included use the method generateXNewRecommendationsForUserId instead.
+     * included use the method generateNNewRecommendationsForUserId instead.
      * @param userId 
      * @param onlyUnique
      * @param amountOfDesiredNewRecommendations defaults to 1
@@ -181,7 +176,7 @@ export default class KNNRecommender {
         amountOfDesiredNearestNeighboursToUse: number = 1
     ): Array<Recommendation> {
         const userRecommendations = this.getAllRecommendationsForUserId(userId)
-        const userSimilarities = this.getXNearestNeighboursForUserId(userId, amountOfDesiredNearestNeighboursToUse)
+        const userSimilarities = this.getNNearestNeighboursForUserId(userId, amountOfDesiredNearestNeighboursToUse)
 
         let newRecommendations = new Array<Recommendation>(amountOfDesiredNewRecommendations)
         let newRecommendationCounter = 0
@@ -216,7 +211,7 @@ export default class KNNRecommender {
 
     /**
      * Get all the recommendations for certain user id. 
-     * You can use this method together with getXNearestNeighboursForUserId 
+     * You can use this method together with getNNearestNeighboursForUserId 
      * to manually generate recommendations
      * for one user based on the recommedations of other users.
      * @param userId 
