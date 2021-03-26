@@ -169,6 +169,22 @@ describe('basic test', () => {
         expect(userRecommendationsAfter[2]).to.equal(1);
     })
 
+    it('should add new row correctly', () => {
+        const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+
+        kNNRecommender.addNewRowToDataset(['user 4', 1, 0, 1, 1, 0, 0, 0])
+
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+
+        const userRecommendationsAfter = kNNRecommender.getAllRecommendationsForUserId('user 4')
+        expect(userRecommendationsAfter[0]).to.equal('user 4');
+        expect(userRecommendationsAfter[1]).to.equal(1);
+        expect(userRecommendationsAfter[2]).to.equal(0);
+
+    })
+
+
     it('should fail gracefully with empty', () => {
         expect(() => new KNNRecommender(emptyUserItemMatrix)).to.throw()
     })

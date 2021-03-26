@@ -154,7 +154,9 @@ export default class KNNRecommender {
     /**
      * Update the liking value for a certain user and item.
      * NOTE: This method does not invoke an automatic recalculation of the 
-     * user similarities. You need to tricker that manually if you wish.
+     * user similarities. You need to tricker that manually if you wish by running
+     * initializeKNNRecommenderForZeroOneUserMatrix-method
+     * 
      * @param userId 
      * @param itemId 
      * @param value -1, 0 or 1
@@ -166,9 +168,20 @@ export default class KNNRecommender {
         this.userItemMatrix[this.userToRowNumberMap[userId]][this.itemNameToColumnNumberMap[itemId]] = value
     }
 
-    //TODO:
-    public addNewRowToDataset(userRow: string | number[]) {
-
+    /**
+     * Add a new row to the data set
+     * NOTE: This method does not invoke an automatic recalculation of the
+     * user similarities. You need to tricker that manually if you wish by running
+     * initializeKNNRecommenderForZeroOneUserMatrix-method
+     * @param userRow ['user x', 1, 0, -1, ...]
+     */
+    public addNewRowToDataset(userRow: Array<string | number>) {
+        if (!userRow || userRow.length != this.userItemMatrix[0].length) {
+            throw new Error("The user row to be added doesn't have the same amount of columns as the current user item matrix")
+        } else if (typeof userRow[0] != "string" || typeof userRow[1] != "number") {
+            throw new Error("The user row to be added isn't in the correct format that should be ['user id', 0, 1, ...]")
+        }
+        this.userItemMatrix.push(userRow)
     }
 
     //TODO:
