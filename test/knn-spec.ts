@@ -83,7 +83,6 @@ const wrongSize2UserItemMatrix: any[][] = [
     ['user 3', 1, 0, 0, 1, 0, 1, 0]
 ]
 
-
 describe('basic test', () => {
     it('should get the first similar user correctly', () => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
@@ -93,6 +92,41 @@ describe('basic test', () => {
         expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
         expect(userToOtherUsersArray[0].similarity).to.equal(3 / 5);
     })
+
+    it('should initialize with an empty matrix when users added first', () => {
+        const kNNRecommender = new KNNRecommender(null)
+        kNNRecommender.addNewUserToDataset(['user 1'])
+        kNNRecommender.addNewUserToDataset(['user 2'])
+        kNNRecommender.addNewItemToDataset('item 1')
+        kNNRecommender.addNewItemToDataset('item 2')
+
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+
+        const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
+
+        expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+        expect(userToOtherUsersArray[0].similarity).to.equal(0);
+    })
+
+    it('should initialize with an empty matrix when items added first', () => {
+        const kNNRecommender = new KNNRecommender(null)
+        kNNRecommender.addNewItemToDataset('item 1')
+        kNNRecommender.addNewItemToDataset('item 2')
+        kNNRecommender.addNewEmptyUserToDataset('user 1')
+        kNNRecommender.addNewEmptyUserToDataset('user 2')
+
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+        kNNRecommender.addLikeForUserToAnItem('user 1', 'item 1')
+        kNNRecommender.addLikeForUserToAnItem('user 2', 'item 1')
+
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+
+        const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
+
+        expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+        expect(userToOtherUsersArray[0].similarity).to.equal(1);
+    })
+
 
     it('should get the similarities for three users correctly', () => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrix)
@@ -196,7 +230,7 @@ describe('basic test', () => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
         kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
 
-        kNNRecommender.addNewRowToDataset(['user 3', 1, 0, 1, 1, 0, 0, 0])
+        kNNRecommender.addNewUserToDataset(['user 3', 1, 0, 1, 1, 0, 0, 0])
 
         kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
 
@@ -208,7 +242,7 @@ describe('basic test', () => {
         const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3')
         expect(userRecommendations[0].itemId).to.equal('item 2');
 
-        expect(() => kNNRecommender.addNewRowToDataset(['user 3', 1, 0, 1, 1, 0, 0, 0])).to.throw()
+        expect(() => kNNRecommender.addNewUserToDataset(['user 3', 1, 0, 1, 1, 0, 0, 0])).to.throw()
     })
 
     it('should add new item correctly', () => {

@@ -48,11 +48,19 @@ export default class KNNRecommender {
      * that at least one of the two users has either liked or disliked.
      * This receommender can also work only based on non recommendations and recommendations (0's and 1's)
      * so it's not necessary to provide dislikes (-1).
+     * You can initialize the recommender with a null-matrix and then fill it with addNewItemToDataset
+     * and addNewUserToDataset methods before initializing it.
      * @param userItemMatrix = [['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]
      */
-    constructor(userItemMatrix: Array<Array<string | number>>) {
-        this.checkUserItemMatrix(userItemMatrix)
-        this.userItemMatrix = userItemMatrix
+    constructor(userItemMatrix: Array<Array<string | number>> | null) {
+        if (!userItemMatrix) {//allow initialization with and empty matrix to be filled later with addItems and addUsers methods.
+            console.warn("Initializing knn-recommender with an empty user item matrix")
+            this.userItemMatrix = new Array(new Array())
+            this.userItemMatrix[0].push('emptycorner')
+        } else {
+            this.checkUserItemMatrix(userItemMatrix)
+            this.userItemMatrix = userItemMatrix
+        }
     }
 
     private checkUserItemMatrix(userItemMatrix: Array<Array<string | number>>) {
@@ -189,16 +197,30 @@ export default class KNNRecommender {
     }
 
     /**
-     * Add a new row to the data set
+     * Convenience method to add an empty user to data set with only user id.
+     * All the recommendations are initialized with 0
+     * @param userId 
+     */
+    public addNewEmptyUserToDataset(userId: string) {
+        let userArray = new Array<string | number>(this.userItemMatrix[0].length)
+        userArray[0] = userId
+        for (let i = 1; i < this.userItemMatrix[0].length; i++) {
+            userArray[i] = 0
+        }
+        this.addNewUserToDataset(userArray)
+    }
+
+    /**
+     * Add a new user row to the data set
      * NOTE: This method does not invoke an automatic recalculation of the
      * user similarities. You need to tricker that manually if you wish by running
      * initializeKNNRecommenderForZeroOneUserMatrix-method
      * @param userRow ['user x', 1, 0, -1, ...]
      */
-    public addNewRowToDataset(userRow: Array<string | number>) {
+    public addNewUserToDataset(userRow: Array<string | number>) {
         if (!userRow || userRow.length != this.userItemMatrix[0].length) {
             throw new Error("The user row to be added doesn't have the same amount of columns as the current user item matrix")
-        } else if (typeof userRow[0] != "string" || typeof userRow[1] != "number") {
+        } else if (typeof userRow[0] != "string" /*|| typeof userRow[1] != "number"*/) {
             throw new Error("The user row to be added isn't in the correct format that should be ['user id', 0, 1, ...]")
         } else if (this.userToRowNumberMap[userRow[0]]) {
             throw new Error(`A row for the given userid: ${userRow[0]} already exists in the user item matrix. Can't add a second row for the same user id. `)
@@ -339,7 +361,7 @@ export default class KNNRecommender {
                     }
                 }
                 itemIdToColumnNumberMapInitiated = true // initiate this only once on the first run
-                let jaccardSimilarity = similarRatings / ratingsDoneByEitherUser
+                let jaccardSimilarity = ratingsDoneByEitherUser !== 0 ? similarRatings / ratingsDoneByEitherUser : 0
 
                 if (typeof this.userItemMatrix[i2][0] !== "string") {
                     throw new TypeError(`Malformatted user item matrix. Element at` +
