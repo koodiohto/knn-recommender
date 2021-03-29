@@ -143,6 +143,13 @@ describe('basic test', () => {
         expect(userRecommendations[1].recommenderUserId).to.equal('user 1');
         expect(userRecommendations[1].similarityWithRecommender).to.equal(2 / 5);
         expect(userRecommendations[2]).to.equal(undefined);
+
+        const userRecommendations2 = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 40, 20)
+        expect(userRecommendations2[0].itemId).to.equal('item 6');
+        expect(userRecommendations2[1]).to.equal(undefined);
+
+
+
     })
 
     it('should get 3 new (not unique) recommendations correctly for user', () => {
