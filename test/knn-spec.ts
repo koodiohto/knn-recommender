@@ -168,12 +168,21 @@ describe('basic test', () => {
         const userRecommendationsBefore = kNNRecommender.getAllRecommendationsForUserId('user 1')
         expect(userRecommendationsBefore[0]).to.equal('user 1');
         expect(userRecommendationsBefore[2]).to.equal(-1);
+        expect(userRecommendationsBefore[3]).to.equal(0);
+        expect(userRecommendationsBefore[4]).to.equal(0);
 
-        kNNRecommender.updateUserItemMatrixForUserId('user 1', 'item 2', 1)
+
+        kNNRecommender.addLikeForUserToAnItem('user 1', 'item 2')
+        kNNRecommender.addDislikeForUserToAnItem('user 1', 'item 3')
+        kNNRecommender.updateUserItemMatrixForUserId('user 1', 'item 4', -1)
 
         const userRecommendationsAfter = kNNRecommender.getAllRecommendationsForUserId('user 1')
         expect(userRecommendationsAfter[0]).to.equal('user 1');
         expect(userRecommendationsAfter[2]).to.equal(1);
+        expect(userRecommendationsAfter[3]).to.equal(-1);
+        expect(userRecommendationsAfter[4]).to.equal(-1);
+
+
     })
 
     it('should add new row correctly', () => {
