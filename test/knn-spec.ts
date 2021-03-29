@@ -84,8 +84,10 @@ const wrongSize2UserItemMatrix: any[][] = [
 ]
 
 const generateABigMatrix = () => {
-    const MATRIX_SIZE = 500
-    let bigMatrix: any[][] = new Array(MATRIX_SIZE)
+    const ITEM_SIZE = 500
+    const USER_SIZE = 500
+
+    let bigMatrix: any[][] = new Array(USER_SIZE)
 
     const getRandomInt = (min: number, max: number) => {
         min = Math.ceil(min);
@@ -93,9 +95,9 @@ const generateABigMatrix = () => {
         return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
     }
 
-    for (let i = 0; i < MATRIX_SIZE; i++) {
-        bigMatrix[i] = new Array(MATRIX_SIZE)
-        for (let j = 0; j < MATRIX_SIZE; j++) {
+    for (let i = 0; i < USER_SIZE; i++) {
+        bigMatrix[i] = new Array(ITEM_SIZE)
+        for (let j = 0; j < ITEM_SIZE; j++) {
             let value: string | number = getRandomInt(-1, 2)
             if (i === 0 && j === 0) {
                 value = 'emptycorner'
