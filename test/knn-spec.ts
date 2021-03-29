@@ -83,6 +83,35 @@ const wrongSize2UserItemMatrix: any[][] = [
     ['user 3', 1, 0, 0, 1, 0, 1, 0]
 ]
 
+const generateABigMatrix = () => {
+    const MATRIX_SIZE = 500
+    let bigMatrix: any[][] = new Array(MATRIX_SIZE)
+
+    const getRandomInt = (min: number, max: number) => {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+    }
+
+    for (let i = 0; i < MATRIX_SIZE; i++) {
+        bigMatrix[i] = new Array(MATRIX_SIZE)
+        for (let j = 0; j < MATRIX_SIZE; j++) {
+            let value: string | number = getRandomInt(-1, 2)
+            if (i === 0 && j === 0) {
+                value = 'emptycorner'
+            } else if (j === 0) {
+                value = `user ${i}`
+            } else if (i === 0) {
+                value = `item ${j}`
+            }
+
+            bigMatrix[i][j] = value
+        }
+    }
+    //console.log("bigmatrix: " + JSON.stringify(bigMatrix))
+    return bigMatrix
+}
+
 describe('basic test', () => {
     it('should get the first similar user correctly', () => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
@@ -259,6 +288,31 @@ describe('basic test', () => {
         expect(userRecommendationsAfter[8]).to.equal(0);
     })
 
+    it('should work with a big matrix', function (done) {
+        this.timeout(0);//disable timeout
+        setTimeout(done, 300);
+        const bigMatix = generateABigMatrix()
+        const kNNRecommender = new KNNRecommender(bigMatix)
+        const timeStampBefore = new Date()
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+        const timeStampAfter = new Date()
+        const timeDif = (timeStampAfter.getTime() - timeStampBefore.getTime())
+
+        console.log(`time to initialize the big matrix was: ${timeDif}`)
+        expect(timeDif).to.be.least(1000);
+
+        const timeStampBefore2 = new Date()
+        const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 50', 2, 20)
+        const timeStampAfter2 = new Date()
+
+        expect((timeStampAfter2.getTime() - timeStampBefore2.getTime())).to.be.lessThan(10);
+        expect(userRecommendations[0].itemId).not.to.equal(undefined);
+        expect(userRecommendations[0].recommenderUserId).not.to.equal(undefined);
+        expect(userRecommendations[0].similarityWithRecommender).to.be.greaterThan(0.1)
+        expect(userRecommendations[0].similarityWithRecommender).to.be.lessThan(0.9)
+
+    })
+
     it('should fail gracefully with empty', () => {
         expect(() => new KNNRecommender(emptyUserItemMatrix)).to.throw()
     })
@@ -300,4 +354,6 @@ describe('basic test', () => {
         const kNNRecommender = new KNNRecommender(wrongSize2UserItemMatrix)
         expect(() => kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()).to.throw();
     })
+
+
 })

@@ -54,7 +54,7 @@ export default class KNNRecommender {
      */
     constructor(userItemMatrix: Array<Array<string | number>> | null) {
         if (!userItemMatrix) {//allow initialization with and empty matrix to be filled later with addItems and addUsers methods.
-            console.warn("Initializing knn-recommender with an empty user item matrix")
+            console.warn("Warning: Initializing knn-recommender with an empty user item matrix")
             this.userItemMatrix = new Array(new Array())
             this.userItemMatrix[0].push('emptycorner')
         } else {
