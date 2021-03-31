@@ -330,13 +330,12 @@ export default class KNNRecommender {
      */
     private calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks(): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.chunkIntermediator(1, resolve, reject)
+            this.chunkIntermediator(1, this.userItemMatrix.length, resolve, reject)
         });
     }
 
-    private chunkIntermediator(startIndex: number, resolve: Function, reject: Function) {
-        const rows = this.userItemMatrix.length
-        const rowsLenghtOrIPlusTen = (startIndex + 10) > rows ? rows : (startIndex + 10)
+    private chunkIntermediator(startIndex: number, totalRows: number, resolve: Function, reject: Function) {
+        const rowsLenghtOrIPlusTen = (startIndex + 10) > totalRows ? totalRows : (startIndex + 10)
         try {
             this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startIndex, rowsLenghtOrIPlusTen)
         } catch (error) {
@@ -344,8 +343,8 @@ export default class KNNRecommender {
             return;
         }
 
-        if (rowsLenghtOrIPlusTen < rows) {
-            setTimeout(() => this.chunkIntermediator(startIndex + 10, resolve, reject), 0)
+        if (rowsLenghtOrIPlusTen < totalRows) {
+            setTimeout(() => this.chunkIntermediator(startIndex + 10, totalRows, resolve, reject), 0)
         } else {
             this.initialized = true
             resolve(true)

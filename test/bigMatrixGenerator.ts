@@ -8,9 +8,9 @@ export const generateABigMatrix = (ITEM_SIZE: number = 500, USER_SIZE: number = 
         return Math.floor(Math.random() * (max - min) + min);
     }
 
-    for (let i = 0; i < USER_SIZE; i++) {
+    for (let i = 0; i <= USER_SIZE; i++) {
         bigMatrix[i] = new Array(ITEM_SIZE)
-        for (let j = 0; j < ITEM_SIZE; j++) {
+        for (let j = 0; j <= ITEM_SIZE; j++) {
             let value: string | number = getRandomInt(-1, 2)
             if (i === 0 && j === 0) {
                 value = 'emptycorner'

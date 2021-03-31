@@ -196,8 +196,6 @@ describe('basic test', () => {
             expect(userRecommendations2[1]).to.equal(undefined);
             done()
         })
-
-
     })
 
     it('should get 3 new (not unique) recommendations correctly for user', (done) => {
@@ -214,6 +212,37 @@ describe('basic test', () => {
             expect(userRecommendations[2].itemId).to.equal('item 6');
             expect(userRecommendations[2].recommenderUserId).to.equal('user 1');
             expect(userRecommendations[2].similarityWithRecommender).to.equal(2 / 5);
+            done()
+        })
+    })
+
+    it('should get new recommendations correctly for over 10 sized user matrix', (done) => {
+        const kNNRecommender = new KNNRecommender(generateABigMatrix(15, 15))
+        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+            const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 9', 2, 5)
+            const userRecommendations2 = kNNRecommender.generateNNewRecommendationsForUserId('user 10', 2, 5)
+            const userRecommendations3 = kNNRecommender.generateNNewRecommendationsForUserId('user 11', 2, 5)
+            const userRecommendations4 = kNNRecommender.generateNNewRecommendationsForUserId('user 15', 2, 5)
+
+            expect(userRecommendations[0].itemId).not.to.equal(undefined);
+            expect(userRecommendations[0].recommenderUserId).not.to.equal(undefined);
+            expect(userRecommendations[0].similarityWithRecommender).not.to.equal(undefined);
+
+            expect(userRecommendations2[0].itemId).not.to.equal(undefined);
+            expect(userRecommendations2[0].recommenderUserId).not.to.equal(undefined);
+            expect(userRecommendations2[0].similarityWithRecommender).not.to.equal(undefined);
+
+            expect(userRecommendations3[0].itemId).not.to.equal(undefined);
+            expect(userRecommendations3[0].recommenderUserId).not.to.equal(undefined);
+            expect(userRecommendations3[0].similarityWithRecommender).not.to.equal(undefined);
+
+            expect(userRecommendations4[0].itemId).not.to.equal(undefined);
+            expect(userRecommendations4[0].recommenderUserId).not.to.equal(undefined);
+            expect(userRecommendations4[0].similarityWithRecommender).not.to.equal(undefined);
+
+            done()
+        }).catch((error) => {
+            expect(false).equal(true)
             done()
         })
     })
