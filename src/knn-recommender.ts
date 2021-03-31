@@ -9,8 +9,6 @@ type Recommendation = {
     similarityWithRecommender: number;
 };
 
-
-
 export default class KNNRecommender {
 
     private userItemMatrix: Array<Array<string | number>>
@@ -75,14 +73,15 @@ export default class KNNRecommender {
 
     /**
      * Do the time consuming initializations. 
-     * This is a heavy O(n^3) + O(n * log(n)) operation, so it's recommended
-     * to run it in a thread provided by your running environment.
-     * This library tries to be agnostic to the Javascript engine used and 
-     * thus this is not threaded here.
+     * This is a heavy O(n^3) + O(n * log(n)) operation.
      */
-    public initializeKNNRecommenderForZeroOneUserMatrix(): void {
-        this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap()
-        this.initialized = true
+    public initializeKNNRecommenderForZeroOneUserMatrix(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks().then((value) => {
+                this.initialized = true
+                resolve(value)
+            }).catch((error) => { reject(new Error(error.message)) })
+        });
     }
 
     /**
@@ -191,7 +190,8 @@ export default class KNNRecommender {
     public updateUserItemMatrixForUserId(userId: string, itemId: string, value: number) {
         this.checkInitiated()
         if (!this.userToRowNumberMap[userId] || !this.itemIdToColumnNumberMap[itemId]) {
-            throw new Error("userId or itemId not valid when updating user's value")
+            throw new Error("userId or itemId not valid when updating user's value. " +
+                "Have you initialized the recommender after adding new items or users?")
         }
         this.userItemMatrix[this.userToRowNumberMap[userId]][this.itemIdToColumnNumberMap[itemId]] = value
     }
@@ -322,19 +322,53 @@ export default class KNNRecommender {
             throw new Error("Recommender not initialized!")
         }
     }
+
+    /**
+     * Run initialization in chunks.
+     * 
+     * @returns return a promise that resolves to true when initalization is done.
+     */
+    private calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.chunkIntermediator(1, resolve, reject)
+        });
+    }
+
+    private chunkIntermediator(startIndex: number, resolve: Function, reject: Function) {
+        const rows = this.userItemMatrix.length
+        const rowsLenghtOrIPlusTen = (startIndex + 10) > rows ? rows : (startIndex + 10)
+        try {
+            this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startIndex, rowsLenghtOrIPlusTen)
+        } catch (error) {
+            reject(error)
+            return;
+        }
+
+        if (rowsLenghtOrIPlusTen < rows) {
+            setTimeout(() => this.chunkIntermediator(startIndex + 10, resolve, reject), 0)
+        } else {
+            this.initialized = true
+            resolve(true)
+        }
+    }
+
     /**
      * This is a heavy (roughly: O(n^3) + O(n * log(n)) operation. 
      */
-    private calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(): void {
+    private calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startAtRow: number, endAtRow: number): void {
         const rows = this.userItemMatrix.length
         const columns = this.userItemMatrix[0].length
 
-        let itemIdToColumnNumberMapInitiated = false
+        let itemIdToColumnNumberMapInitiated = true
 
-        this.userToRowNumberMap = {} //reinitialize these
-        this.itemIdToColumnNumberMap = {}
+        if (startAtRow === 1) {
+            itemIdToColumnNumberMapInitiated = false
 
-        for (let i = 1; i < rows; i++) {//first row is item names, start with second row
+            this.userToRowNumberMap = {} //reinitialize these
+            this.itemIdToColumnNumberMap = {}
+        }
+
+        for (let i = startAtRow; i < endAtRow; i++) {//first row is item names, start with second row
             let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 2)
             let userToOtherUsersCounter = 0
             //Go through all the rows to match the user with all the rest of the users

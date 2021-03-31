@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         // Target es5
-        "target": "es5",
+        "target": "es2015",
         // Search under node_modules for non-relative imports.
         "moduleResolution": "node",
         // Process & infer types from .js files.
@@ -15,7 +15,8 @@
         "outDir": "dist",
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "decs.d.ts"
     ],
     "exclude": [
         "node_modules",
