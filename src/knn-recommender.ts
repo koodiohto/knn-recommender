@@ -334,6 +334,19 @@ export default class KNNRecommender {
         });
     }
 
+    /**
+     * Run calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap method
+     * in chunks of 10. Let the javascript event loop run through after each chunk to check for
+     * other stuff in the event loop so we don't block the event loop. 
+     * A new chunkIntermediator-method is added to the timer phase of the next event loop.
+     * This is a "threaded" version of the initialization.
+     * 
+     * @param startIndex 
+     * @param totalRows 
+     * @param resolve 
+     * @param reject 
+     * @returns 
+     */
     private chunkIntermediator(startIndex: number, totalRows: number, resolve: Function, reject: Function) {
         const rowsLenghtOrIPlusTen = (startIndex + 10) > totalRows ? totalRows : (startIndex + 10)
         try {
