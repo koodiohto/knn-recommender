@@ -25,6 +25,8 @@ npm install --save knn-recommender
 ```-->
 TODO, npm publishing to be made.
 
+You can also [download the javascript source for knn-recommender.js](https://github.com/koodiohto/knn-recommender/blob/main/dist/knn-recommender.js) directly from this repository.
+
 # Basic usage
 
 ```js
