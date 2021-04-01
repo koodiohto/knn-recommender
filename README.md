@@ -17,11 +17,11 @@ npm install --save knn-recommender
 # Basic usage
 
 ```js
-const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
-        kNNRecommender.initializeRecommender().then(() => {
-            const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3')
-            console.log(`new recommendation for user 3 ${userRecommendations[0].itemId}`)
-        })
+const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]])
+kNNRecommender.initializeRecommender().then(() => {
+    const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3')
+    console.log(`new recommendation for user 3 ${userRecommendations[0].itemId}`)
+})
 ```
 
 # API
