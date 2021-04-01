@@ -1,7 +1,17 @@
 # knn-recommender
-Pure JavaScript implementation of a K-nearest neighbour based collaborative filtering recommender for like/dislike user item matrices. This library should run in node and browser environments. This is an exprimental implementation. If you are looking for a more high performing library, I'd recommend you to check out [recommendationRacoon](https://github.com/guymorita/recommendationRaccoon).
+A pure JavaScript implementation of a K-nearest neighbour based collaborative filtering recommender for like/dislike user item matrices. This library should run both in node and browser environments. This is an exprimental implementation. If you are looking for a more high performing library, I'd recommend you to check out [recommendationRacoon](https://github.com/guymorita/recommendationRaccoon).
 
 The recommender takes a user item matrix of size X x Y where X[0] column represents the user id's and Y[0] the item labels. The cells in the matrix are expected to contain either -1 (dislike), 0 (no rating given) or 1 (like). This information can be used to calculate the similarity of users in the matrix based on jaccard similarity.
+
+Example of a possible user item matrix:
+```
+[
+    ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
+        'item 5', 'item 6', 'item 7'],
+    ['user 1', 1, -1, 0, 0, -1, 1, 0],
+    ['user 2', 1, -1, 0, 1, -1, 0, 0]
+]
+```
 
 The Jaccard similarity calculates the common ratings between two users and divides that by the total ratings given by the users. The non-ratings are not considered when calculating the similarity of two users.
 
