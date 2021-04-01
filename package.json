@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "k-nearest neighbour based recommender for user item matrices.",
   "main": "knn-recommender.js",
+  "author": "Ohto Rainio",
+  "repository": "https://github.com/koodiohto/knn-recommender",
+  "homepage": "https://github.com/koodiohto/knn-recommender",
+  "license": "MIT",
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/knn-recommender.js",
-    "buildandstart": "npm run build && node dist/knn-recommender.js",
     "test": "TS_NODE_FILES=true mocha -r ts-node/register ./**/*-spec.ts",
     "clean": "rimraf dist"
   },
@@ -17,8 +20,6 @@
     "user item matrix",
     "collaborative filtering"
   ],
-  "author": "Ohto Rainio",
-  "license": "MIT",
   "devDependencies": {
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.2",
