@@ -27,6 +27,8 @@ kNNRecommender.initializeRecommender().then(() => {
 
 # API
 
+Scroll to right to see all the columns...
+
 Method             | Arguments          | Returns      | Description                      | Example  
 ------------------|---------------|---------------|-------------|------------  
 KNNRecommender | ```userItemMatrix: Array<Array<string or number>> or null ```| void | This constructor takes a X x Y user item matrix as its argument. X[0] column represents the user id's and Y[0] the item labels. The cells in the matrix are expected to contain either -1 (dislike), 0 (no rating given) or 1 (like). The matrix can be null and you can use the addNewItemToDataset anda addNewUserToDataset methods for initializing the matrix | ```const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]]) ```
@@ -35,6 +37,8 @@ generateNNewRecommendationsForUserId | ```userId: string, amountOfDesiredNewReco
 generateNNewUniqueRecommendationsForUserId | ```userId: string, amountOfDesiredNewRecommendations: number = 1, amountOfDesiredNearestNeighboursToUse: number = 3 ``` | ``` Array<Recommendation> ``` | Try to generate the desired amount of new recommendations for a user based on what similar users have liked. The method starts with the most similar user and collects all the likings from him/her where the current user hasn't expressed their preference yet. If the amount of desired recommendations hasn't been fulfilled yet, it proceededs to the second most similar user and so on. The method doesn't add same recommendation twice even if it would be recommended by several users. If you want to have these potential multi recommendations included use the method generateNNewRecommendationsForUserId instead. Returns an array containing the recommendations or an empty array if no recommendations can be generated from the data e.g. ```[{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null] ``` | ```const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', 2, 3); console.log(`${userRecommendations[0].itemId} ${userRecommendations[0].recommenderUserId} {userRecommendations[0].similarityWithRecommender}`)```
 getNNearestNeighboursForUserId | ```userId: string, amountOfDesiredNeighbours: number = -1 ``` | ``` Array<UserSimilarity> ``` | Returns a sorted list of the n most similar users to the given userId. The elements in the list contain objects in the form {otherUserId, similarity}. E.g. ```[{otherUserId: 'User 2', similarity: 0.53}, {otherUserId: 'User 3', similarity: 0.4}] ```| ```  const user1ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1')```
 getAllRecommendationsForUserId | ```userId: string ``` | ``` Array<string or number> ``` | Get all the recommendations for certain user id. You can use this method together with getNNearestNeighboursForUserId to manually generate recommendations for one user based on the recommedations of other users. Returns e.g. ```['user 1', 1, 0, -1, 0]``` | ```  const allUserRecommendations = kNNRecommender.getAllRecommendationsForUserId('user 1')```
+addLikeForUserToAnItem | ```userId: string, itemId: string ``` | void | Update a liking value for a certain user and item. NOTE: This method does not invoke an automatic recalculation of the user similarities. You need to tricker that manually if you wish by running initializeRecommender-method | ```kNNRecommender.addLikeForUserToAnItem('user 1', 'item 2')```
+addDislikeForUserToAnItem | ```userId: string, itemId: string ``` | void | Update a liking value for a certain user and item. NOTE: This method does not invoke an automatic recalculation of the user similarities. You need to tricker that manually if you wish by running initializeRecommender-method | ```kNNRecommender.addDislikeForUserToAnItem('user 1', 'item 2')```
 
 # Performance
 
@@ -52,7 +56,6 @@ Matrix size (users x items)      | Initialization time
 50 x 10000 | 0.5s
 
 Adding more users raises the initialization times radically. So if you find a way to divide your users into clusters, you can reduce the amount of user rows needed for providing recommendations for a certain user and thus provide recommendations faster.
-
 
 # Contact
 
