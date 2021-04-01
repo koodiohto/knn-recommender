@@ -16,10 +16,9 @@ npm install --save knn-recommender
 
 # API
 
-
 Method             | Arguments          | Returns      | Description     | Example  
 ------------------|---------------|---------------|-------------|------------  
-KNNRecommender | ```js userItemMatrix: Array<Array<string or number>> or null ```| void | The User item matrix to be provided for the recommender. The matrix can be null and you can use the addNewItemToDataset anda addNewUserToDataset methods for initializing the matrix | ```js const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]]) ```
+KNNRecommender | ```userItemMatrix: Array<Array<string or number>> or null ```| void | The User item matrix to be provided for the recommender. The matrix can be null and you can use the addNewItemToDataset anda addNewUserToDataset methods for initializing the matrix | ```const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]]) ```
 placeholder | String | true | null | ```js import test```
 
 # Performance
