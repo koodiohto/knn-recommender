@@ -80,7 +80,7 @@ export default class KNNRecommender {
             this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks().then((value) => {
                 this.initialized = true
                 resolve(value)
-            }).catch((error) => { reject(new Error(error.message)) })
+            }).catch((error) => { reject(error) })
         });
     }
 
