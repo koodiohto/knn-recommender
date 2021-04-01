@@ -14,7 +14,8 @@
     "k-nearest neighbour",
     "knn recommendation",
     "recommendation engine",
-    "user item matrix"
+    "user item matrix",
+    "collaborative filtering"
   ],
   "author": "Ohto Rainio",
   "license": "MIT",

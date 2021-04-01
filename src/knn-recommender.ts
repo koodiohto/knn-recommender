@@ -44,7 +44,7 @@ export default class KNNRecommender {
      * and Y (1, -1, 0, 1, -1, 0, 0) their Jaccard similarity
      * is (1+1+1) / 5 = 3/5. 5 is effectively the number of the elements 
      * that at least one of the two users has either liked or disliked.
-     * This receommender can also work only based on non recommendations and recommendations (0's and 1's)
+     * This recommender can also work only based on non recommendations and recommendations (0's and 1's)
      * so it's not necessary to provide dislikes (-1).
      * You can initialize the recommender with a null-matrix and then fill it with addNewItemToDataset
      * and addNewUserToDataset methods before initializing it.
