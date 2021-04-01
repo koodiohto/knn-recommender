@@ -243,25 +243,40 @@ export default class KNNRecommender {
         }
     }
 
+    /**
+     * Get all the recommendations for certain user id. 
+     * You can use this method together with getNNearestNeighboursForUserId 
+     * to manually generate recommendations
+     * for one user based on the recommedations of other users.
+     * @param userId 
+     * @returns e.g. ['user 1', 1, 0, -1, 0]
+     */
+    public getAllRecommendationsForUserId(userId: string): Array<string | number> {
+        const rowNumber = this.userToRowNumberMap[userId]
+        if (!rowNumber) {
+            throw new Error('Invalid user id')
+        }
+        return this.userItemMatrix[rowNumber]
+    }
 
     /**
-     * Try to generate the desired amount of new unique recommendations for a user
-     * based on what similar users have liked.
-     * The method starts with the most similar user and collects all the 
-     * likings from him/her where the current user hasn't expressed their
-     * preference yet. If the amount of desired recommendations hasn't been
-     * fulfilled yet, it proceededs to the second most similar user and so on.
-     * The method doesn't add same recommendation twice even if it would be 
-     * recommended by several users. If you want to have these potential multi recommendations
-     * included use the method generateNNewRecommendationsForUserId instead.
-     * @param userId 
-     * @param onlyUnique
-     * @param amountOfDesiredNewRecommendations defaults to 1
-     * @param amountOfDesiredNearestNeighboursToUse defaults to 3
-     * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
-     * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, 
-     * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
-     */
+ * Try to generate the desired amount of new unique recommendations for a user
+ * based on what similar users have liked.
+ * The method starts with the most similar user and collects all the 
+ * likings from him/her where the current user hasn't expressed their
+ * preference yet. If the amount of desired recommendations hasn't been
+ * fulfilled yet, it proceededs to the second most similar user and so on.
+ * The method doesn't add same recommendation twice even if it would be 
+ * recommended by several users. If you want to have these potential multi recommendations
+ * included use the method generateNNewRecommendationsForUserId instead.
+ * @param userId 
+ * @param onlyUnique
+ * @param amountOfDesiredNewRecommendations defaults to 1
+ * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+ * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
+ * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, 
+ * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
+ */
     private generateNNewRecommendationsForUserIdInternal(userId: string,
         onlyUnique: boolean,
         amountOfDesiredNewRecommendations: number = 1,
@@ -299,22 +314,6 @@ export default class KNNRecommender {
         }
 
         return newRecommendations
-    }
-
-    /**
-     * Get all the recommendations for certain user id. 
-     * You can use this method together with getNNearestNeighboursForUserId 
-     * to manually generate recommendations
-     * for one user based on the recommedations of other users.
-     * @param userId 
-     * @returns e.g. ['user 1', 1, 0, -1, 0]
-     */
-    public getAllRecommendationsForUserId(userId: string): Array<string | number> {
-        const rowNumber = this.userToRowNumberMap[userId]
-        if (!rowNumber) {
-            throw new Error('Invalid user id')
-        }
-        return this.userItemMatrix[rowNumber]
     }
 
     private checkInitiated(): void {
