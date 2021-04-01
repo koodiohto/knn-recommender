@@ -159,7 +159,7 @@ export default class KNNRecommender {
 
 
     /**
-     * Update a liking value for a certain user and item.
+     * Update the liking value for a certain user and item.
      * @param userId 
      * @param itemId 
      */
@@ -169,7 +169,7 @@ export default class KNNRecommender {
 
 
     /**
-     * Update a disliking value for a certain user and item.
+     * Update the disliking value for a certain user and item.
      * @param userId 
      * @param itemId 
      */
