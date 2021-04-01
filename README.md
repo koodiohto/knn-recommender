@@ -13,7 +13,7 @@ Example of a possible user item matrix:
 ]
 ```
 
-The Jaccard similarity calculates the common ratings between two users and divides that by the total ratings given by the users. The non-ratings are not considered when calculating the similarity of two users.
+Jaccard similarity calculates the common ratings between two users and divides that by the total ratings given by the users. The non-ratings are not considered when calculating the similarity of two users.
 
 So if user X has a rating matrix (1, -1, 0, 0, -1, 1, 0) and Y (1, -1, 0, 1, -1, 0, 0) their Jaccard similarity is (1+1+1) / 5 = 3/5. 5 is effectively the number of the elements that at least one of the two users has either liked or disliked. Based on this we could provide a recommendation for user Y for item number 6 as Y hasn't expressed any preference for that and X has liked this item.
 
