@@ -181,7 +181,7 @@ export default class KNNRecommender {
      * Update the liking value for a certain user and item.
      * NOTE: This method does not invoke an automatic recalculation of the 
      * user similarities. You need to tricker that manually if you wish by running
-     * initializeKNNRecommenderForZeroOneUserMatrix-method
+     * initializeRecommender-method
      * 
      * @param userId 
      * @param itemId 
@@ -197,24 +197,10 @@ export default class KNNRecommender {
     }
 
     /**
-     * Convenience method to add an empty user to data set with only user id.
-     * All the recommendations are initialized with 0
-     * @param userId 
-     */
-    public addNewEmptyUserToDataset(userId: string) {
-        let userArray = new Array<string | number>(this.userItemMatrix[0].length)
-        userArray[0] = userId
-        for (let i = 1; i < this.userItemMatrix[0].length; i++) {
-            userArray[i] = 0
-        }
-        this.addNewUserToDataset(userArray)
-    }
-
-    /**
      * Add a new user row to the data set
      * NOTE: This method does not invoke an automatic recalculation of the
      * user similarities. You need to tricker that manually if you wish by running
-     * initializeKNNRecommenderForZeroOneUserMatrix-method
+     * initializeRecommender-method
      * @param userRow ['user x', 1, 0, -1, ...]
      */
     public addNewUserToDataset(userRow: Array<string | number>) {
@@ -229,11 +215,26 @@ export default class KNNRecommender {
     }
 
     /**
+     * Convenience method to add an empty user to data set with only user id.
+     *  All the recommendations are initialized with 0
+     * @param userId 
+     * */
+    public addNewEmptyUserToDataset(userId: string) {
+        let userArray = new Array<string | number>(this.userItemMatrix[0].length)
+        userArray[0] = userId
+        for (let i = 1; i < this.userItemMatrix[0].length; i++) {
+            userArray[i] = 0
+        }
+        this.addNewUserToDataset(userArray)
+    }
+
+
+    /**
      * Add a new item to the user item matrix and initalize all user recommendations
      * with value 0 for the new item.
      * NOTE: This method does not invoke an automatic recalculation of the
      * user similarities. You need to tricker that manually if you wish by running
-     * initializeKNNRecommenderForZeroOneUserMatrix-method
+     * initializeRecommender-method
      * @param itemId 
      */
     public addNewItemToDataset(itemId: string) {
