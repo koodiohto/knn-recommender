@@ -23,7 +23,7 @@ This recommender can also work only based on non recommendations and recommendat
 <!--```bash
 npm install --save knn-recommender
 ```-->
-TODO
+TODO, npm publishing to be made.
 
 # Basic usage
 
