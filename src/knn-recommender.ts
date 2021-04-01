@@ -105,23 +105,23 @@ export default class KNNRecommender {
     }
 
     /**
-   * Try to generate the desired amount of new recommendations for a user
-   * based on what similar users have liked.
-   * The method starts with the most similar user and collects all the
-   * likings from him/her where the current user hasn't expressed their
-   * preference yet. If the amount of desired recommendations hasn't been
-   * fulfilled yet, it proceededs to the second most similar user and so on.
-   * The method might add the same recommendation twice if an item has been
-   * recommended by several similar users. If you want to have these potential multi recommendations
-   * exluded use the method generateNNewUniqueRecommendationsForUserId instead.
-   * @param userId
-   * @param amountOfDesiredNewRecommendations defaults to 1
-   * @param amountOfDesiredNearestNeighboursToUse defaults to 3
-   * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
-   * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
-   * {itemId: 'item 1', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}
-   * {itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
-   */
+       * Try to generate the desired amount of new recommendations for a user
+       * based on what similar users have liked.
+       * The method starts with the most similar user and collects all the
+       * likings from him/her where the current user hasn't expressed their
+       * preference yet. If the amount of desired recommendations hasn't been
+       * fulfilled yet, it proceededs to the second most similar user and so on.
+       * The method might add the same recommendation twice if an item has been
+       * recommended by several similar users. If you want to have these potential multi recommendations
+       * exluded use the method generateNNewUniqueRecommendationsForUserId instead.
+       * @param userId
+       * @param amountOfDesiredNewRecommendations defaults to 1
+       * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+       * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
+       * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
+       * {itemId: 'item 1', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}
+       * {itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
+       */
     public generateNNewRecommendationsForUserId(userId: string,
         amountOfDesiredNewRecommendations: number = 1,
         amountOfDesiredNearestNeighboursToUse: number = 3): Array<Recommendation> {
