@@ -9,8 +9,6 @@ project.lock.json
 /packages
 /TestResults
 
-#exclude babel build
-/dist
 
 .DS_Store
 
