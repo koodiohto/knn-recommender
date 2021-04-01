@@ -75,7 +75,7 @@ export default class KNNRecommender {
      * Do the time consuming initializations. 
      * This is a heavy O(n^3) + O(n * log(n)) operation.
      */
-    public initializeKNNRecommenderForZeroOneUserMatrix(): Promise<boolean> {
+    public initializeRecommender(): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks().then((value) => {
                 this.initialized = true

@@ -89,7 +89,7 @@ const wrongSize2UserItemMatrix: any[][] = [
 describe('basic test', () => {
     it('should get the first similar user correctly', (done) => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
             expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
@@ -105,7 +105,7 @@ describe('basic test', () => {
         kNNRecommender.addNewItemToDataset('item 1')
         kNNRecommender.addNewItemToDataset('item 2')
 
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
 
             const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
@@ -122,11 +122,11 @@ describe('basic test', () => {
         kNNRecommender.addNewEmptyUserToDataset('user 1')
         kNNRecommender.addNewEmptyUserToDataset('user 2')
 
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix()
+        kNNRecommender.initializeRecommender()
         kNNRecommender.addLikeForUserToAnItem('user 1', 'item 1')
         kNNRecommender.addLikeForUserToAnItem('user 2', 'item 1')
 
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
 
             const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
@@ -139,7 +139,7 @@ describe('basic test', () => {
 
     it('should get the similarities for three users correctly', (done) => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             const user1ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 2)
 
             expect(user1ToOtherUsersArray[0].otherUserId).to.equal('user 2');
@@ -166,7 +166,7 @@ describe('basic test', () => {
 
     it('should get all the recommendations for user correctly', (done) => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             const userRecommendations = kNNRecommender.getAllRecommendationsForUserId('user 2')
 
             expect(userRecommendations[0]).to.equal('user 2');
@@ -180,7 +180,7 @@ describe('basic test', () => {
 
     it('should get 3 new unique recommendations correctly for user', (done) => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', 3, 2)
 
             expect(userRecommendations[0].itemId).to.equal('item 1');
@@ -200,7 +200,7 @@ describe('basic test', () => {
 
     it('should get 3 new (not unique) recommendations correctly for user', (done) => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 3', 3, 2)
 
             expect(userRecommendations[0].itemId).to.equal('item 1');
@@ -218,7 +218,7 @@ describe('basic test', () => {
 
     it('should get new recommendations correctly for over 10 sized user matrix', (done) => {
         const kNNRecommender = new KNNRecommender(generateABigMatrix(15, 15))
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 9', 2, 5)
             const userRecommendations2 = kNNRecommender.generateNNewRecommendationsForUserId('user 10', 2, 5)
             const userRecommendations3 = kNNRecommender.generateNNewRecommendationsForUserId('user 11', 2, 5)
@@ -249,7 +249,7 @@ describe('basic test', () => {
 
     it('should update item for user correctly', (done) => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
 
             const userRecommendationsBefore = kNNRecommender.getAllRecommendationsForUserId('user 1')
             expect(userRecommendationsBefore[0]).to.equal('user 1');
@@ -274,11 +274,11 @@ describe('basic test', () => {
 
     it('should add new row correctly', (done) => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
 
             kNNRecommender.addNewUserToDataset(['user 3', 1, 0, 1, 1, 0, 0, 0])
 
-            kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+            kNNRecommender.initializeRecommender().then(() => {
 
                 const userRecommendationsAfter = kNNRecommender.getAllRecommendationsForUserId('user 3')
                 expect(userRecommendationsAfter[0]).to.equal('user 3');
@@ -295,7 +295,7 @@ describe('basic test', () => {
 
     it('should add new item correctly', (done) => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
 
             const userRecommendationsBefore = kNNRecommender.getAllRecommendationsForUserId('user 2')
             expect(userRecommendationsBefore[8]).to.equal(undefined);
@@ -314,7 +314,7 @@ describe('basic test', () => {
         const bigMatix = generateABigMatrix()
         const kNNRecommender = new KNNRecommender(bigMatix)
         const timeStampBefore = new Date()
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             const timeStampAfter = new Date()
             const timeDif = (timeStampAfter.getTime() - timeStampBefore.getTime())
 
@@ -342,7 +342,7 @@ describe('basic test', () => {
     it('should fail gracefully with two same user ids in the data', (done) => {
         const kNNRecommender = new KNNRecommender(malformattedUserItemMatrixWithTwoSameUserIds)
 
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             done(new Error('Expected method to reject.'))
         }).catch((err) => {
             expect(true)
@@ -357,7 +357,7 @@ describe('basic test', () => {
 
     it('should fail gracefully with malformatted data in user item matrix', (done) => {
         const kNNRecommender = new KNNRecommender(malformattedDataInUserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             done(new Error('Expected method to reject.'))
         }).catch((err) => {
             expect(true)
@@ -371,7 +371,7 @@ describe('basic test', () => {
 
     it('should fail gracefully with other than first user id being a number', (done) => {
         const kNNRecommender = new KNNRecommender(malformattedSecondUserIdANumber)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             done(new Error('Expected method to reject.'))
         }).catch((err) => {
             expect(true)
@@ -385,7 +385,7 @@ describe('basic test', () => {
 
     it('should fail gracefully with wrong sized user item matrix', (done) => {
         const kNNRecommender = new KNNRecommender(wrongSizeUserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             done(new Error('Expected method to reject.'))
         }).catch((err) => {
             expect(true)
@@ -395,7 +395,7 @@ describe('basic test', () => {
 
     it('should fail gracefully with second wrong sized user item matrix', (done) => {
         const kNNRecommender = new KNNRecommender(wrongSize2UserItemMatrix)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             done(new Error('Expected method to reject.'))
         }).catch((err) => {
             expect(true)

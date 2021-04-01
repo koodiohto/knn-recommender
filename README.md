@@ -18,7 +18,7 @@ npm install --save knn-recommender
 
 ```js
 const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
-        kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {
+        kNNRecommender.initializeRecommender().then(() => {
             const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3')
             console.log(`new recommendation for user 3 ${userRecommendations[0].itemId}`)
         })
@@ -26,10 +26,10 @@ const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommend
 
 # API
 
-Method             | Arguments          | Returns      | Description     | Example  
+Method             | Arguments          | Returns      | Description                      | Example  
 ------------------|---------------|---------------|-------------|------------  
 KNNRecommender | ```userItemMatrix: Array<Array<string or number>> or null ```| void | This constructor takes a X x Y user item matrix as its argument. X[0] column represents the user id's and Y[0] the item labels. The cells in the matrix are expected to contain either -1 (dislike), 0 (no rating given) or 1 (like). The matrix can be null and you can use the addNewItemToDataset anda addNewUserToDataset methods for initializing the matrix | ```const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]]) ```
-initializeKNNRecommenderForZeroOneUserMatrix | no arguments | ``` Promise<boolean> ``` | Initializes the recommender based on the provided user item matrix so we can start asking recommendations from it. If you add new items or users to the matrix and want the updates to affect the recommendations, you need to run this initialization again. This initialization is a heavy (roughly: O(n^3) + O(n * log(n)) operation. The method returns a Promise that resolves to true when the initialization is completed succesfully. | ```kNNRecommender.initializeKNNRecommenderForZeroOneUserMatrix().then(() => {... ```
+initializeRecommender | no arguments | ``` Promise<boolean> ``` | Initializes the recommender based on the provided user item matrix so we can start asking recommendations from it. If you add new items or users to the matrix and want the updates to affect the recommendations, you need to run this initialization again. This initialization is a heavy (roughly: O(n^3) + O(n * log(n)) operation. The method returns a Promise that resolves to true when the initialization is completed succesfully. | ```kNNRecommender.initializeRecommender().then(() => {... ```
 
 # Performance
 
