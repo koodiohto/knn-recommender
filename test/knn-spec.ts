@@ -107,6 +107,18 @@ describe('basic test', () => {
         })
     })
 
+    it('should get the first similar user correctly when only one user initialized', () => {
+        const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)
+        kNNRecommender.initializeRecommenderForUserId('user 1')
+
+        const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
+
+        expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+        expect(userToOtherUsersArray[0].similarity).to.equal(3 / 5);
+
+        expect(() => kNNRecommender.getNNearestNeighboursForUserId('user 2', 1)).to.throw()
+    })
+
     it('should initialize with an empty matrix when users added first', (done) => {
         const kNNRecommender = new KNNRecommender(null)
         kNNRecommender.addNewUserToDataset(['user 1'])

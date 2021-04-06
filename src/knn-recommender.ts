@@ -76,7 +76,8 @@ export default class KNNRecommender {
      */
     public initializeRecommender(): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.userToRowNumberMap = {} //reinitialize this
+            this.userToRowNumberMap = {} //reinitialize
+            this.itemIdToColumnNumberMap = {}
             this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks().then((value) => {
                 this.initialized = true
                 resolve(value)
@@ -86,11 +87,20 @@ export default class KNNRecommender {
 
     /**
      * (Re)-initialize the recommender only for one userId.
+     * This is significanly faster than initializing the recommender
+     * for all users, so you should use this method when possible.
      * 
      * @param userId 
      */
     public initializeRecommenderForUserId(userId: string) {
-
+        for (let i = 0; i < this.userItemMatrix.length; i++) {
+            if (this.userItemMatrix[i][0] === userId) {
+                this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(i, i + 1)
+                this.initialized = true
+                return
+            }
+        }
+        throw Error(`UserId ${userId} not found in user item matrix!`)
     }
 
     /**
@@ -106,6 +116,10 @@ export default class KNNRecommender {
         Array<UserSimilarity> {
         this.checkInitiated()
         let userSimilarities: Array<UserSimilarity> = this.userToUserSimilarityMap[userId]
+
+        if (!userSimilarities) {
+            throw Error(`User similarities no initialized for userId: ${userId}`)
+        }
 
         if (amountOfDesiredNeighbours !== -1 && userSimilarities.length > amountOfDesiredNeighbours) {
             return userSimilarities.slice(0, amountOfDesiredNeighbours);
@@ -220,7 +234,7 @@ export default class KNNRecommender {
         } else if (this.userToRowNumberMap[userRow[0]]) {
             throw new Error(`A row for the given userid: ${userRow[0]} already exists in the user item matrix. Can't add a second row for the same user id. `)
         }
-        this.userItemMatrix.push(userRow)
+        this.userToRowNumberMap[userRow[0]] = this.userItemMatrix.push(userRow) - 1
     }
 
     /**
@@ -247,7 +261,7 @@ export default class KNNRecommender {
      * @param itemId 
      */
     public addNewItemToDataset(itemId: string) {
-        this.userItemMatrix[0].push(itemId)
+        this.itemIdToColumnNumberMap[itemId] = this.userItemMatrix[0].push(itemId) - 1
         for (let i = 1; i < this.userItemMatrix.length; i++) {//initialize all user recommendations with zeros for the new item
             this.userItemMatrix[i].push(0)
         }
@@ -383,7 +397,7 @@ export default class KNNRecommender {
 
         let itemIdToColumnNumberMapInitiated = false
 
-        for (let i = startAtRow; i < endAtRow; i++) {//first row is item names, start with second row
+        for (let i = startAtRow; i < endAtRow; i++) {//first row is item names
             let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 2)
             let userToOtherUsersCounter = 0
             //Go through all the rows to match the user with all the rest of the users
