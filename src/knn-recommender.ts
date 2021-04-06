@@ -335,7 +335,7 @@ export default class KNNRecommender {
 
     /**
      * Run calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap method
-     * in chunks of 10. Let the javascript event loop run through after each chunk to check for
+     * in chunks. Let the javascript event loop run through after each chunk to check for
      * other stuff in the event loop so we don't block the event loop. 
      * A new chunkIntermediator-method is added to the timer phase of the next event loop.
      * This is a "threaded" version of the initialization.
@@ -347,16 +347,17 @@ export default class KNNRecommender {
      * @returns 
      */
     private chunkIntermediator(startIndex: number, totalRows: number, resolve: Function, reject: Function) {
-        const rowsLenghtOrIPlusTen = (startIndex + 10) > totalRows ? totalRows : (startIndex + 10)
+        const CHUNK_SIZE = 3
+        const rowsLenghtOrIPlusChunkSize = (startIndex + CHUNK_SIZE) > totalRows ? totalRows : (startIndex + CHUNK_SIZE)
         try {
-            this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startIndex, rowsLenghtOrIPlusTen)
+            this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startIndex, rowsLenghtOrIPlusChunkSize)
         } catch (error) {
             reject(error)
             return;
         }
 
-        if (rowsLenghtOrIPlusTen < totalRows) {
-            setTimeout(() => this.chunkIntermediator(startIndex + 10, totalRows, resolve, reject), 0)
+        if (rowsLenghtOrIPlusChunkSize < totalRows) {
+            setTimeout(() => this.chunkIntermediator(startIndex + CHUNK_SIZE, totalRows, resolve, reject), 0)
         } else {
             this.initialized = true
             resolve(true)

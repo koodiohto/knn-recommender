@@ -127,17 +127,18 @@ describe('basic test', () => {
         kNNRecommender.addNewEmptyUserToDataset('user 1')
         kNNRecommender.addNewEmptyUserToDataset('user 2')
 
-        kNNRecommender.initializeRecommender()
-        kNNRecommender.addLikeForUserToAnItem('user 1', 'item 1')
-        kNNRecommender.addLikeForUserToAnItem('user 2', 'item 1')
-
         kNNRecommender.initializeRecommender().then(() => {
+            kNNRecommender.addLikeForUserToAnItem('user 1', 'item 1')
+            kNNRecommender.addLikeForUserToAnItem('user 2', 'item 1')
 
-            const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
+            kNNRecommender.initializeRecommender().then(() => {
 
-            expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
-            expect(userToOtherUsersArray[0].similarity).to.equal(1);
-            done()
+                const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
+
+                expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+                expect(userToOtherUsersArray[0].similarity).to.equal(1);
+                done()
+            })
         })
     })
 
