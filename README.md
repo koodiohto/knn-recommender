@@ -22,10 +22,10 @@ So if user X has a rating matrix (1, -1, 0, 0, -1, 1, 0) and Y (1, -1, 0, 1, -1,
 This recommender can also work only based on non recommendations and recommendations (0's and 1's so it's not necessary to provide dislikes (-1).
 
 # Installation
-<!--```bash
+
+```bash
 npm install --save knn-recommender
-```-->
-TODO, npm publishing to be made.
+```
 
 You can also [download the javascript source for knn-recommender.js](https://github.com/koodiohto/knn-recommender/blob/main/dist/knn-recommender.js) directly from this repository.
 
