@@ -33,6 +33,8 @@ You can also [download the javascript source for knn-recommender.js](https://git
 
 If you have the User-Item matrix available, you can initialize the recommender for all users.
 ```js
+import KNNRecommender from 'knn-recommender';
+
 const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]])
 kNNRecommender.initializeRecommender().then(() => {
     const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2')
@@ -43,6 +45,8 @@ kNNRecommender.initializeRecommender().then(() => {
 Or you can start filling the items and users to the matrix one by one and also initialize the recommender only for only certain users. Initializing the recommender only for one user is significantly faster, so you should do that if you only provide recommendations for this particular user.
 
 ```js
+import KNNRecommender from 'knn-recommender';
+
 const kNNRecommender = new KNNRecommender(null)
 kNNRecommender.addNewItemToDataset('item 1')
 kNNRecommender.addNewItemToDataset('item 2')
