@@ -10,6 +10,8 @@ project.lock.json
 /TestResults
 
 
+/distfornpmpublishing
+
 .DS_Store
 
 appsettings.json

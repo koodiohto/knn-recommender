@@ -2,7 +2,7 @@
   "name": "knn-recommender",
   "version": "1.0.0",
   "description": "k-nearest neighbour based recommender for user item matrices.",
-  "main": "knn-recommender.js",
+  "main": "distfornpmpublishing/knn-recommender.js",
   "author": "Ohto Rainio",
   "repository": "https://github.com/koodiohto/knn-recommender",
   "homepage": "https://github.com/koodiohto/knn-recommender",
@@ -11,7 +11,8 @@
     "build": "npx tsc",
     "start": "node dist/knn-recommender.js",
     "test": "TS_NODE_FILES=true mocha -r ts-node/register ./**/*-spec.ts",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "npmdist": "npm run build && npx webpack"
   },
   "keywords": [
     "k-nearest neighbour",
@@ -28,7 +29,9 @@
     "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
     "typescript": "4.2.3",
-    "typings": "^2.1.1"
+    "typings": "^2.1.1",
+    "webpack": "^5.30.0",
+    "webpack-cli": "^4.6.0"
   },
   "dependencies": {}
 }
