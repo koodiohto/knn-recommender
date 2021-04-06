@@ -40,7 +40,7 @@ kNNRecommender.initializeRecommender().then(() => {
 })
 ```
 
-Or you can start filling the items and users to the matrix one by one and also initialize the recommender only for one user. Initializing the recommender only for one user is significantly faster, so you should do that if you only provide recommendations for this particular user.
+Or you can start filling the items and users to the matrix one by one and also initialize the recommender only for only certain users. Initializing the recommender only for one user is significantly faster, so you should do that if you only provide recommendations for this particular user.
 
 ```js
 const kNNRecommender = new KNNRecommender(null)
@@ -55,10 +55,23 @@ kNNRecommender.addDislikeForUserToAnItem('user 2', 'item 1')
 
 kNNRecommender.initializeRecommenderForUserId('user 2')
 
-const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 1)
+const user2Recommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 1)
 
 //should print 'item 2'
-console.log(`new recommendation for user 2 ${userRecommendations[0].itemId}`)
+console.log(`new recommendation for user 2 ${user2Recommendations[0].itemId}`)
+
+kNNRecommender.addNewItemToDataset('item 3')
+kNNRecommender.addLikeForUserToAnItem('user 2', 'item 3')
+
+kNNRecommender.initializeRecommenderForUserId('user 1')
+
+const user1Recommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 1', 1)
+
+//should print 'item 3'
+console.log(`new recommendation for user 1 ${user1Recommendations[0].itemId}`)
+
+
+
 ```
 
 # API

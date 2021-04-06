@@ -119,7 +119,7 @@ describe('basic test', () => {
         expect(() => kNNRecommender.getNNearestNeighboursForUserId('user 2', 1)).to.throw()
     })
 
-    it('should work with this test', () => {
+    it('should work with step by step test from README.md', () => {
         const kNNRecommender = new KNNRecommender(null)
         kNNRecommender.addNewItemToDataset('item 1')
         kNNRecommender.addNewItemToDataset('item 2')
@@ -132,10 +132,19 @@ describe('basic test', () => {
 
         kNNRecommender.initializeRecommenderForUserId('user 2')
 
-        const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 1)
+        const user2Recommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 1)
 
+        expect(user2Recommendations[0].itemId).to.equal('item 2');
 
-        expect(userRecommendations[0].itemId).to.equal('item 2');
+        kNNRecommender.addNewItemToDataset('item 3')
+        kNNRecommender.addLikeForUserToAnItem('user 2', 'item 3')
+
+        kNNRecommender.initializeRecommenderForUserId('user 1')
+
+        const user1Recommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 1', 1)
+
+        expect(user1Recommendations[0].itemId).to.equal('item 3');
+
     })
 
 
