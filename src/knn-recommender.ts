@@ -93,6 +93,7 @@ export default class KNNRecommender {
      * @param userId 
      */
     public initializeRecommenderForUserId(userId: string) {
+        this.userToRowNumberMap[userId] = 0 //reinitialize this, we are counting on javascript intepretating 0 as false in our checks..A bit risky.
         for (let i = 0; i < this.userItemMatrix.length; i++) {
             if (this.userItemMatrix[i][0] === userId) {
                 this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(i, i + 1)
@@ -211,7 +212,6 @@ export default class KNNRecommender {
      * @param value -1, 0 or 1
      */
     public updateUserItemMatrixForUserId(userId: string, itemId: string, value: number) {
-        this.checkInitiated()
         if (!this.userToRowNumberMap[userId] || !this.itemIdToColumnNumberMap[itemId]) {
             throw new Error("userId or itemId not valid when updating user's value. " +
                 "Have you initialized the recommender after adding new items or users?")

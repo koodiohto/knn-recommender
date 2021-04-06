@@ -119,6 +119,26 @@ describe('basic test', () => {
         expect(() => kNNRecommender.getNNearestNeighboursForUserId('user 2', 1)).to.throw()
     })
 
+    it('should work with this test', () => {
+        const kNNRecommender = new KNNRecommender(null)
+        kNNRecommender.addNewItemToDataset('item 1')
+        kNNRecommender.addNewItemToDataset('item 2')
+        kNNRecommender.addNewEmptyUserToDataset('user 1')
+        kNNRecommender.addNewEmptyUserToDataset('user 2')
+
+        kNNRecommender.addDislikeForUserToAnItem('user 1', 'item 1')
+        kNNRecommender.addLikeForUserToAnItem('user 1', 'item 2')
+        kNNRecommender.addDislikeForUserToAnItem('user 2', 'item 1')
+
+        kNNRecommender.initializeRecommenderForUserId('user 2')
+
+        const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 1)
+
+
+        expect(userRecommendations[0].itemId).to.equal('item 2');
+    })
+
+
     it('should initialize with an empty matrix when users added first', (done) => {
         const kNNRecommender = new KNNRecommender(null)
         kNNRecommender.addNewUserToDataset(['user 1'])

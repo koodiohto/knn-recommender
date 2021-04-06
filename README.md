@@ -1,5 +1,7 @@
 # knn-recommender
-A pure JavaScript implementation of a K-nearest neighbour based collaborative filtering recommender for like/dislike user item matrices. This library should run both in node and browser environments. This is an exprimental implementation. If you are looking for a more high performing library, I'd recommend you to check out [recommendationRacoon](https://github.com/guymorita/recommendationRaccoon).
+A pure JavaScript implementation of a K-nearest neighbour based collaborative filtering recommender primarily for like/dislike User-Item matrices. You can use the recommender e.g. for Item-Item characteristics matrices as well. So this library enables you to provide "You liked this, you might also like this or "items similar to this item" recommendations. 
+
+This library should run both in node and browser environments. This is an exprimental implementation and is intended for fairly small size matrices (~1000 users). If you are looking for a more high performing (and properly threaded) library, I'd recommend you to check out [recommendationRacoon](https://github.com/guymorita/recommendationRaccoon).
 
 The recommender takes a user item matrix of size X x Y where X[0] column represents the user id's and Y[0] the item labels. The cells in the matrix are expected to contain either -1 (dislike), 0 (no rating given) or 1 (like). This information can be used to calculate the similarity of users in the matrix based on jaccard similarity.
 
@@ -29,12 +31,34 @@ You can also [download the javascript source for knn-recommender.js](https://git
 
 # Basic usage
 
+If you have the User-Item matrix available, you can initialize the recommender for all users.
 ```js
 const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]])
 kNNRecommender.initializeRecommender().then(() => {
     const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2')
     console.log(`new recommendation for user 2 ${userRecommendations[0].itemId}`)
 })
+```
+
+Or you can start filling the items and users to the matrix one by one and also initialize the recommender only for one user. Initializing the recommender only for one user is significantly faster, so you should do that if you only provide recommendations for this particular user.
+
+```js
+const kNNRecommender = new KNNRecommender(null)
+kNNRecommender.addNewItemToDataset('item 1')
+kNNRecommender.addNewItemToDataset('item 2')
+kNNRecommender.addNewEmptyUserToDataset('user 1')
+kNNRecommender.addNewEmptyUserToDataset('user 2')
+
+kNNRecommender.addDislikeForUserToAnItem('user 1', 'item 1')
+kNNRecommender.addLikeForUserToAnItem('user 1', 'item 2')
+kNNRecommender.addDislikeForUserToAnItem('user 2', 'item 1')
+
+kNNRecommender.initializeRecommenderForUserId('user 2')
+
+const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 1)
+
+//should print 'item 2'
+console.log(`new recommendation for user 2 ${userRecommendations[0].itemId}`)
 ```
 
 # API
