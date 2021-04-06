@@ -278,7 +278,7 @@ export default class KNNRecommender {
     public getAllRecommendationsForUserId(userId: string): Array<string | number> {
         const rowNumber = this.userToRowNumberMap[userId]
         if (!rowNumber) {
-            throw new Error('Invalid user id')
+            throw new Error(`Invalid or non initialized user id ${userId}`)
         }
         return this.userItemMatrix[rowNumber]
     }
