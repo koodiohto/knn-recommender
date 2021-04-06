@@ -33,6 +33,10 @@ const onlyItemsMatrix: any[][] = [
         'item 5', 'item 6', 'item 7']
 ]
 
+const oneDimensionalMatrix: any[] =
+    ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
+        'item 5', 'item 6', 'item 7']
+
 const emptyUserItemMatrix: any[][] = []
 
 const malformattedUserItemMatrixWithTwoSameUserIds: any[][] = [
@@ -359,6 +363,11 @@ describe('basic test', () => {
         expect(() => new KNNRecommender(emptyUserItemMatrix)).to.throw()
     })
 
+    it('should fail gracefully with one dimensional matrix', () => {
+        expect(() => new KNNRecommender(oneDimensionalMatrix)).to.throw()
+    })
+
+
     it('should fail gracefully with two same user ids in the data', (done) => {
         const kNNRecommender = new KNNRecommender(malformattedUserItemMatrixWithTwoSameUserIds)
 
@@ -369,6 +378,8 @@ describe('basic test', () => {
             done();
         })
     })
+
+
 
     it('should fail gracefully when not initiated', () => {
         const kNNRecommender = new KNNRecommender(simpleUserItemMatrix)

@@ -62,7 +62,7 @@ export default class KNNRecommender {
     }
 
     private checkUserItemMatrix(userItemMatrix: Array<Array<string | number>>) {
-        if (!userItemMatrix || !userItemMatrix[0] ||
+        if (!userItemMatrix || !userItemMatrix[0] || userItemMatrix[0].constructor !== Array ||
             (typeof userItemMatrix[0][1] !== "string")) {
             throw new TypeError(`Malformatted user item matrix. ` +
                 `It should be a non zero two dimensional array in the format ` +
