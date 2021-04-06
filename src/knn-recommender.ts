@@ -76,11 +76,21 @@ export default class KNNRecommender {
      */
     public initializeRecommender(): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            this.userToRowNumberMap = {} //reinitialize this
             this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks().then((value) => {
                 this.initialized = true
                 resolve(value)
             }).catch((error) => { reject(error) })
         });
+    }
+
+    /**
+     * (Re)-initialize the recommender only for one userId.
+     * 
+     * @param userId 
+     */
+    public initializeRecommenderForUserId(userId: string) {
+
     }
 
     /**
@@ -371,14 +381,7 @@ export default class KNNRecommender {
         const rows = this.userItemMatrix.length
         const columns = this.userItemMatrix[0].length
 
-        let itemIdToColumnNumberMapInitiated = true
-
-        if (startAtRow === 1) {
-            itemIdToColumnNumberMapInitiated = false
-
-            this.userToRowNumberMap = {} //reinitialize these
-            this.itemIdToColumnNumberMap = {}
-        }
+        let itemIdToColumnNumberMapInitiated = false
 
         for (let i = startAtRow; i < endAtRow; i++) {//first row is item names, start with second row
             let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 2)
