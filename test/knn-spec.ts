@@ -28,6 +28,11 @@ const threeUserItemMatrixForFindingRecommendations: any[][] = [
     ['user 3', 0, -1, 0, 1, -1, 0, 0]
 ]
 
+const onlyItemsMatrix: any[][] = [
+    ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
+        'item 5', 'item 6', 'item 7']
+]
+
 const emptyUserItemMatrix: any[][] = []
 
 const malformattedUserItemMatrixWithTwoSameUserIds: any[][] = [
@@ -136,6 +141,20 @@ describe('basic test', () => {
         })
     })
 
+    it('should initialize with items only matrix ', (done) => {
+        const kNNRecommender = new KNNRecommender(onlyItemsMatrix)
+        kNNRecommender.addNewEmptyUserToDataset('user 1')
+        kNNRecommender.addNewEmptyUserToDataset('user 2')
+
+        kNNRecommender.initializeRecommender().then(() => {
+
+            const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
+
+            expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+            expect(userToOtherUsersArray[0].similarity).to.equal(0);
+            done()
+        })
+    })
 
     it('should get the similarities for three users correctly', (done) => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrix)
@@ -363,10 +382,6 @@ describe('basic test', () => {
             expect(true)
             done();
         })
-    })
-
-    it('should fail gracefully with first user id being a number ', () => {
-        expect(() => new KNNRecommender(malformattedUserIdANumber)).to.throw()
     })
 
     it('should fail gracefully with other than first user id being a number', (done) => {

@@ -62,9 +62,8 @@ export default class KNNRecommender {
     }
 
     private checkUserItemMatrix(userItemMatrix: Array<Array<string | number>>) {
-        if (!userItemMatrix || userItemMatrix.length < 2 || !userItemMatrix[0] || userItemMatrix[0].length < 2 ||
-            (typeof userItemMatrix[0][1] !== "string") || (typeof userItemMatrix[1][0] !== "string") ||
-            (typeof userItemMatrix[1][1] !== "number")) {
+        if (!userItemMatrix || !userItemMatrix[0] ||
+            (typeof userItemMatrix[0][1] !== "string")) {
             throw new TypeError(`Malformatted user item matrix. ` +
                 `It should be a non zero two dimensional array in the format ` +
                 `[['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]`)
@@ -206,7 +205,7 @@ export default class KNNRecommender {
     public addNewUserToDataset(userRow: Array<string | number>) {
         if (!userRow || userRow.length != this.userItemMatrix[0].length) {
             throw new Error("The user row to be added doesn't have the same amount of columns as the current user item matrix")
-        } else if (typeof userRow[0] != "string" /*|| typeof userRow[1] != "number"*/) {
+        } else if (typeof userRow[0] != "string") {
             throw new Error("The user row to be added isn't in the correct format that should be ['user id', 0, 1, ...]")
         } else if (this.userToRowNumberMap[userRow[0]]) {
             throw new Error(`A row for the given userid: ${userRow[0]} already exists in the user item matrix. Can't add a second row for the same user id. `)
@@ -216,7 +215,7 @@ export default class KNNRecommender {
 
     /**
      * Convenience method to add an empty user to data set with only user id.
-     *  All the recommendations are initialized with 0
+     * All the recommendations are initialized with 0
      * @param userId 
      * */
     public addNewEmptyUserToDataset(userId: string) {
