@@ -38,9 +38,8 @@ export default class KNNRecommender {
         }
     }
     checkUserItemMatrix(userItemMatrix) {
-        if (!userItemMatrix || userItemMatrix.length < 2 || !userItemMatrix[0] || userItemMatrix[0].length < 2 ||
-            (typeof userItemMatrix[0][1] !== "string") || (typeof userItemMatrix[1][0] !== "string") ||
-            (typeof userItemMatrix[1][1] !== "number")) {
+        if (!userItemMatrix || !userItemMatrix[0] || userItemMatrix[0].constructor !== Array ||
+            (typeof userItemMatrix[0][1] !== "string")) {
             throw new TypeError(`Malformatted user item matrix. ` +
                 `It should be a non zero two dimensional array in the format ` +
                 `[['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]`);
@@ -52,11 +51,31 @@ export default class KNNRecommender {
      */
     initializeRecommender() {
         return new Promise((resolve, reject) => {
+            this.userToRowNumberMap = {}; //reinitialize
+            this.itemIdToColumnNumberMap = {};
             this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks().then((value) => {
                 this.initialized = true;
                 resolve(value);
             }).catch((error) => { reject(error); });
         });
+    }
+    /**
+     * (Re)-initialize the recommender only for one userId.
+     * This is significanly faster than initializing the recommender
+     * for all users, so you should use this method when possible.
+     *
+     * @param userId
+     */
+    initializeRecommenderForUserId(userId) {
+        this.userToRowNumberMap[userId] = 0; //reinitialize this, we are counting on javascript intepretating 0 as false in our checks..A bit risky.
+        for (let i = 0; i < this.userItemMatrix.length; i++) {
+            if (this.userItemMatrix[i][0] === userId) {
+                this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(i, i + 1);
+                this.initialized = true;
+                return;
+            }
+        }
+        throw Error(`UserId ${userId} not found in user item matrix!`);
     }
     /**
      * Returns a sorted list of the n most similar users to the given userId.
@@ -70,6 +89,9 @@ export default class KNNRecommender {
     getNNearestNeighboursForUserId(userId, amountOfDesiredNeighbours = -1) {
         this.checkInitiated();
         let userSimilarities = this.userToUserSimilarityMap[userId];
+        if (!userSimilarities) {
+            throw Error(`User similarities no initialized for userId: ${userId}`);
+        }
         if (amountOfDesiredNeighbours !== -1 && userSimilarities.length > amountOfDesiredNeighbours) {
             return userSimilarities.slice(0, amountOfDesiredNeighbours);
         }
@@ -145,7 +167,6 @@ export default class KNNRecommender {
      * @param value -1, 0 or 1
      */
     updateUserItemMatrixForUserId(userId, itemId, value) {
-        this.checkInitiated();
         if (!this.userToRowNumberMap[userId] || !this.itemIdToColumnNumberMap[itemId]) {
             throw new Error("userId or itemId not valid when updating user's value. " +
                 "Have you initialized the recommender after adding new items or users?");
@@ -163,17 +184,17 @@ export default class KNNRecommender {
         if (!userRow || userRow.length != this.userItemMatrix[0].length) {
             throw new Error("The user row to be added doesn't have the same amount of columns as the current user item matrix");
         }
-        else if (typeof userRow[0] != "string" /*|| typeof userRow[1] != "number"*/) {
+        else if (typeof userRow[0] != "string") {
             throw new Error("The user row to be added isn't in the correct format that should be ['user id', 0, 1, ...]");
         }
         else if (this.userToRowNumberMap[userRow[0]]) {
             throw new Error(`A row for the given userid: ${userRow[0]} already exists in the user item matrix. Can't add a second row for the same user id. `);
         }
-        this.userItemMatrix.push(userRow);
+        this.userToRowNumberMap[userRow[0]] = this.userItemMatrix.push(userRow) - 1;
     }
     /**
      * Convenience method to add an empty user to data set with only user id.
-     *  All the recommendations are initialized with 0
+     * All the recommendations are initialized with 0
      * @param userId
      * */
     addNewEmptyUserToDataset(userId) {
@@ -193,7 +214,7 @@ export default class KNNRecommender {
      * @param itemId
      */
     addNewItemToDataset(itemId) {
-        this.userItemMatrix[0].push(itemId);
+        this.itemIdToColumnNumberMap[itemId] = this.userItemMatrix[0].push(itemId) - 1;
         for (let i = 1; i < this.userItemMatrix.length; i++) { //initialize all user recommendations with zeros for the new item
             this.userItemMatrix[i].push(0);
         }
@@ -209,7 +230,7 @@ export default class KNNRecommender {
     getAllRecommendationsForUserId(userId) {
         const rowNumber = this.userToRowNumberMap[userId];
         if (!rowNumber) {
-            throw new Error('Invalid user id');
+            throw new Error(`Invalid or non initialized user id ${userId}`);
         }
         return this.userItemMatrix[rowNumber];
     }
@@ -276,7 +297,7 @@ export default class KNNRecommender {
     }
     /**
      * Run calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap method
-     * in chunks of 10. Let the javascript event loop run through after each chunk to check for
+     * in chunks. Let the javascript event loop run through after each chunk to check for
      * other stuff in the event loop so we don't block the event loop.
      * A new chunkIntermediator-method is added to the timer phase of the next event loop.
      * This is a "threaded" version of the initialization.
@@ -288,16 +309,17 @@ export default class KNNRecommender {
      * @returns
      */
     chunkIntermediator(startIndex, totalRows, resolve, reject) {
-        const rowsLenghtOrIPlusTen = (startIndex + 10) > totalRows ? totalRows : (startIndex + 10);
+        const CHUNK_SIZE = 3;
+        const rowsLenghtOrIPlusChunkSize = (startIndex + CHUNK_SIZE) > totalRows ? totalRows : (startIndex + CHUNK_SIZE);
         try {
-            this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startIndex, rowsLenghtOrIPlusTen);
+            this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startIndex, rowsLenghtOrIPlusChunkSize);
         }
         catch (error) {
             reject(error);
             return;
         }
-        if (rowsLenghtOrIPlusTen < totalRows) {
-            setTimeout(() => this.chunkIntermediator(startIndex + 10, totalRows, resolve, reject), 0);
+        if (rowsLenghtOrIPlusChunkSize < totalRows) {
+            setTimeout(() => this.chunkIntermediator(startIndex + CHUNK_SIZE, totalRows, resolve, reject), 0);
         }
         else {
             this.initialized = true;
@@ -310,13 +332,8 @@ export default class KNNRecommender {
     calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startAtRow, endAtRow) {
         const rows = this.userItemMatrix.length;
         const columns = this.userItemMatrix[0].length;
-        let itemIdToColumnNumberMapInitiated = true;
-        if (startAtRow === 1) {
-            itemIdToColumnNumberMapInitiated = false;
-            this.userToRowNumberMap = {}; //reinitialize these
-            this.itemIdToColumnNumberMap = {};
-        }
-        for (let i = startAtRow; i < endAtRow; i++) { //first row is item names, start with second row
+        let itemIdToColumnNumberMapInitiated = false;
+        for (let i = startAtRow; i < endAtRow; i++) { //first row is item names
             let userToOtherUsersSimilarityList = Array(rows - 2);
             let userToOtherUsersCounter = 0;
             //Go through all the rows to match the user with all the rest of the users
