@@ -1,4 +1,4 @@
-export const generateABigMatrix = (ITEM_SIZE: number = 500, USER_SIZE: number = 500) => {
+export const generateABigMatrix = (USER_SIZE: number = 500, ITEM_SIZE: number = 500) => {
 
     let bigMatrix: any[][] = new Array(USER_SIZE)
 

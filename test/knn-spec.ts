@@ -376,7 +376,7 @@ describe('basic test', () => {
 
     it('should work with a big matrix', function (done) {
         this.timeout(0);//disable timeout
-        const bigMatix = generateABigMatrix()
+        const bigMatix = generateABigMatrix(500, 500)
         const kNNRecommender = new KNNRecommender(bigMatix)
         const timeStampBefore = new Date()
         kNNRecommender.initializeRecommender().then(() => {
