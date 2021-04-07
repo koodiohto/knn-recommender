@@ -9,9 +9,6 @@ project.lock.json
 /packages
 /TestResults
 
-
-/distfornpmpublishing
-
 .DS_Store
 
 appsettings.json
