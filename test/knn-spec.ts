@@ -145,6 +145,12 @@ describe('basic test', () => {
 
         expect(user1Recommendations[0].itemId).to.equal('item 3');
 
+        kNNRecommender.addNewItemToDataset('item 4')
+        kNNRecommender.addLikeForUserToAnItem('user 2', 'item 4')
+        kNNRecommender.initializeRecommenderForUserId('user 1')
+        const user1Recommendations2 = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 1', 2)
+
+        expect(user1Recommendations2[1].itemId).to.equal('item 4');
     })
 
 
