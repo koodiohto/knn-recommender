@@ -15,6 +15,10 @@ project.lock.json
 
 .DS_Store
 
+decs.d.ts
+tsconfig.json
+webpack.config.js
+
 appsettings.json
 local.settings.json
 
