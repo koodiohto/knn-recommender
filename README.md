@@ -1,5 +1,5 @@
 # knn-recommender
-A pure JavaScript implementation of a K-nearest neighbour based collaborative filtering recommender primarily for like/dislike User-Item matrices. You can use the recommender e.g. for Item-Item characteristics matrices as well. So this library enables you to provide "You liked this, you might also like this or "items similar to this item" recommendations. 
+A pure JavaScript implementation of a K-nearest neighbour based collaborative filtering recommender primarily for like/dislike User-Item matrices. You can use the recommender e.g. for Item-Item characteristics matrices as well. So this library enables you to provide "You liked this, you might also like this" or "items similar to this item" recommendations. 
 
 This library should run both in node and browser environments. This is an experimental implementation and is intended for fairly small size matrices (~1000 users). If you are looking for a more high performing (and properly threaded) library, I'd recommend you to check out [recommendationRacoon](https://github.com/guymorita/recommendationRaccoon).
 
@@ -35,7 +35,6 @@ This recommender can also work only based on non recommendations and recommendat
 ```bash
 npm install --save knn-recommender
 ```
-
 You can also [download the javascript source for knn-recommender.js](https://github.com/koodiohto/knn-recommender/blob/main/dist/knn-recommender.js) directly from this repository. Or you can  [download the minified version compiled for npm-distribution](https://github.com/koodiohto/knn-recommender/blob/main/distfornpmpublishing/knn-recommender.js) that should run in browsers and node-environment.
 
 # Basic usage

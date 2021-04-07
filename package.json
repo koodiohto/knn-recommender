@@ -1,6 +1,6 @@
 {
   "name": "knn-recommender",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "k-nearest neighbour based recommender for user item matrices.",
   "main": "distfornpmpublishing/knn-recommender.js",
   "author": "Ohto Rainio",
