@@ -82,8 +82,15 @@ const user1Recommendations = kNNRecommender.generateNNewUniqueRecommendationsFor
 //should print 'item 3'
 console.log(`new recommendation for user 1 ${user1Recommendations[0].itemId}`)
 
+```
 
-
+Sidenote:
+If you use node without babel, you have to import the module like this:
+```js
+const recommender = require('knn-recommender');
+const kNNRecommender = new recommender.default(null)
+kNNRecommender.addNewItemToDataset('item 1')
+...
 ```
 
 # API
