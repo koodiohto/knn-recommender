@@ -87,7 +87,7 @@ console.log(`new recommendation for user 1 ${user1Recommendations[0].itemId}`)
 Sidenote:
 If you use node without babel, you have to import the module like this:
 ```js
-const recommender = KNNRecommender('knn-recommender');
+const KNNRecommender = require('knn-recommender');
 const kNNRecommender = new KNNRecommender.default(null)
 kNNRecommender.addNewItemToDataset('item 1')
 ...
