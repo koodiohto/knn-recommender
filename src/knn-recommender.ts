@@ -22,8 +22,8 @@
  * THE SOFTWARE.
 */
 
-type UserSimilarity = {
-    otherUserId: string;
+type Similarity = {
+    otherRowId: string;
     similarity: number;
 };
 
@@ -35,24 +35,24 @@ type Recommendation = {
 
 export default class KNNRecommender {
 
-    private userItemMatrix: Array<Array<string | number>>
+    private matrix: Array<Array<string | number>>
 
-    private userToUserSimilarityMap: {
-        [key: string]: Array<UserSimilarity>,
+    private rowToRowSimilarityMap: {
+        [key: string]: Array<Similarity>,
     } = {}
 
-    private userToRowNumberMap: {
+    private rowIdToRowNumberMap: {
         [key: string]: number,
     } = {}
 
-    private itemIdToColumnNumberMap: {
+    private columnIdToColumnNumberMap: {
         [key: string]: number,
     } = {}
 
     private initialized = false
 
     /**
-     * Takes a user item matrix of size x*y where
+     * Takes a user item (or item - item characterstic) matrix of size x*y where
      * x[0] column represents the user id's and 
      * y[0] the item labels. The cells in the matrix 
      * are expected to contain either -1 (dislike), 
@@ -72,23 +72,23 @@ export default class KNNRecommender {
      * so it's not necessary to provide dislikes (-1).
      * You can initialize the recommender with a null-matrix and then fill it with addNewItemToDataset
      * and addNewUserToDataset methods before initializing it.
-     * @param userItemMatrix = [['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]
+     * @param matrix = [['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]
      */
-    constructor(userItemMatrix: Array<Array<string | number>> | null) {
-        if (!userItemMatrix) {//allow initialization with and empty matrix to be filled later with addItems and addUsers methods.
+    constructor(matrix: Array<Array<string | number>> | null) {
+        if (!matrix) {//allow initialization with and empty matrix to be filled later with addItems and addUsers methods.
             console.warn("Warning: Initializing knn-recommender with an empty user item matrix")
-            this.userItemMatrix = new Array(new Array())
-            this.userItemMatrix[0].push('emptycorner')
+            this.matrix = new Array(new Array())
+            this.matrix[0].push('emptycorner')
         } else {
-            this.checkUserItemMatrix(userItemMatrix)
-            this.userItemMatrix = userItemMatrix
+            this.checkMatrix(matrix)
+            this.matrix = matrix
         }
     }
 
-    private checkUserItemMatrix(userItemMatrix: Array<Array<string | number>>) {
-        if (!userItemMatrix || !userItemMatrix[0] || userItemMatrix[0].constructor !== Array ||
-            (typeof userItemMatrix[0][1] !== "string")) {
-            throw new TypeError(`Malformatted user item matrix. ` +
+    private checkMatrix(matrix: Array<Array<string | number>>) {
+        if (!matrix || !matrix[0] || matrix[0].constructor !== Array ||
+            (typeof matrix[0][1] !== "string")) {
+            throw new TypeError(`Malformatted matrix. ` +
                 `It should be a non zero two dimensional array in the format ` +
                 `[['emptycorner', 'item 1', 'item 2', 'item 3'], ['user 1', 1, -1, 0], ['user 2', 0, -1, 1]]`)
         }
@@ -100,9 +100,9 @@ export default class KNNRecommender {
      */
     public initializeRecommender(): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.userToRowNumberMap = {} //reinitialize
-            this.itemIdToColumnNumberMap = {}
-            this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks().then((value) => {
+            this.rowIdToRowNumberMap = {} //reinitialize
+            this.columnIdToColumnNumberMap = {}
+            this.calculateDistancesInZeroOneMatrixAndCreateRowIdToRowNumberAndColumnIdToColumnNumberMapsInChunks().then((value) => {
                 this.initialized = true
                 resolve(value)
             }).catch((error) => { reject(error) })
@@ -117,16 +117,31 @@ export default class KNNRecommender {
      * @param userId 
      */
     public initializeRecommenderForUserId(userId: string) {
-        this.userToRowNumberMap[userId] = 0 //reinitialize this, we are counting on javascript intepretating 0 as false in our checks..A bit risky.
-        for (let i = 0; i < this.userItemMatrix.length; i++) {
-            if (this.userItemMatrix[i][0] === userId) {
-                this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(i, i + 1)
+        this.initializeRecommenderForRowId(userId)
+    }
+
+    /**
+     * (Re)-initialize the recommender only for one itemid.
+     * This is significanly faster than initializing the recommender
+     * for all items, so you should use this method when possible.
+     * @param itemId 
+     */
+    public initializeRecommenderForItemId(itemId: string) {
+        this.initializeRecommenderForRowId(itemId)
+    }
+
+    private initializeRecommenderForRowId(rowId: string) {
+        this.rowIdToRowNumberMap[rowId] = 0 //reinitialize this, we are counting on javascript intepretating 0 as false in our checks..A bit risky.
+        for (let i = 0; i < this.matrix.length; i++) {
+            if (this.matrix[i][0] === rowId) {
+                this.calculateDistancesInZeroOneMatrixAndCreateRowIdToRowNumberAndColumnIdToColumnNumberMaps(i, i + 1)
                 this.initialized = true
                 return
             }
         }
-        throw Error(`UserId ${userId} not found in user item matrix!`)
+        throw Error(`Id ${rowId} not found as a row in the matrix!`)
     }
+
 
     /**
      * Returns a sorted list of the n most similar users to the given userId. 
@@ -138,12 +153,31 @@ export default class KNNRecommender {
      * @returns 
      */
     public getNNearestNeighboursForUserId(userId: string, amountOfDesiredNeighbours: number = -1):
-        Array<UserSimilarity> {
+        Array<Similarity> {
+        return this.getNNearestNeighboursForRowId(userId, amountOfDesiredNeighbours)
+    }
+
+    /**
+     * Returns a sorted list of the n most similar items to the given itemId. 
+     * The elements in the list contain objects in the form {otherItemId, similarity}.
+     * E.g. [{otherItemId: 'Item 2', similarity: 0.53}, {otherItemId: 'Item 3', similarity: 0.4}]
+     * 
+     * @param itemId
+     * @param amountOfDesiredNeighbours if not specified get similarity with all other users.
+     * @returns 
+     */
+    public getNNearestNeighboursForItemId(itemId: string, amountOfDesiredNeighbours: number = -1):
+        Array<Similarity> {
+        return this.getNNearestNeighboursForRowId(itemId, amountOfDesiredNeighbours)
+    }
+
+    private getNNearestNeighboursForRowId(rowId: string, amountOfDesiredNeighbours: number = -1):
+        Array<Similarity> {
         this.checkInitiated()
-        let userSimilarities: Array<UserSimilarity> = this.userToUserSimilarityMap[userId]
+        let userSimilarities: Array<Similarity> = this.rowToRowSimilarityMap[rowId]
 
         if (!userSimilarities) {
-            throw Error(`User similarities no initialized for userId: ${userId}`)
+            throw Error(`Similarities not initialized for rowId: ${rowId}`)
         }
 
         if (amountOfDesiredNeighbours !== -1 && userSimilarities.length > amountOfDesiredNeighbours) {
@@ -205,16 +239,14 @@ export default class KNNRecommender {
             amountOfDesiredNearestNeighboursToUse)
     }
 
-
     /**
      * Update the liking value for a certain user and item.
      * @param userId 
      * @param itemId 
      */
     public addLikeForUserToAnItem(userId: string, itemId: string) {
-        this.updateUserItemMatrixForUserId(userId, itemId, 1)
+        this.updateMatrixForRowIdAndColumnId(userId, itemId, 1)
     }
-
 
     /**
      * Update the disliking value for a certain user and item.
@@ -222,7 +254,25 @@ export default class KNNRecommender {
      * @param itemId 
      */
     public addDislikeForUserToAnItem(userId: string, itemId: string) {
-        this.updateUserItemMatrixForUserId(userId, itemId, -1)
+        this.updateMatrixForRowIdAndColumnId(userId, itemId, -1)
+    }
+
+    /**
+     * Add the charasteristic for a certain item and item charasteristic.
+     * @param itemId 
+     * @param itemCharasteristicId 
+     */
+    public addCharacteristicForItem(itemId: string, itemCharasteristicId: string) {
+        this.updateMatrixForRowIdAndColumnId(itemId, itemCharasteristicId, 1)
+    }
+
+    /**
+     * Remove the charasteristic for a certain item and item charasteristic.
+     * @param itemId 
+     * @param itemCharasteristicId 
+     */
+    public removeCharacteristicForItem(itemId: string, itemCharasteristicId: string) {
+        this.updateMatrixForRowIdAndColumnId(itemId, itemCharasteristicId, 0)
     }
 
     /**
@@ -231,16 +281,16 @@ export default class KNNRecommender {
      * user similarities. You need to tricker that manually if you wish by running
      * initializeRecommender-method
      * 
-     * @param userId 
-     * @param itemId 
+     * @param rowId 
+     * @param columnId 
      * @param value -1, 0 or 1
      */
-    public updateUserItemMatrixForUserId(userId: string, itemId: string, value: number) {
-        if (!this.userToRowNumberMap[userId] || !this.itemIdToColumnNumberMap[itemId]) {
+    public updateMatrixForRowIdAndColumnId(rowId: string, columnId: string, value: number) {
+        if (!this.rowIdToRowNumberMap[rowId] || !this.columnIdToColumnNumberMap[columnId]) {
             throw new Error("userId or itemId not valid when updating user's value. " +
                 "Have you initialized the recommender after adding new items or users?")
         }
-        this.userItemMatrix[this.userToRowNumberMap[userId]][this.itemIdToColumnNumberMap[itemId]] = value
+        this.matrix[this.rowIdToRowNumberMap[rowId]][this.columnIdToColumnNumberMap[columnId]] = value
     }
 
     /**
@@ -251,14 +301,14 @@ export default class KNNRecommender {
      * @param userRow ['user x', 1, 0, -1, ...]
      */
     public addNewUserToDataset(userRow: Array<string | number>) {
-        if (!userRow || userRow.length != this.userItemMatrix[0].length) {
-            throw new Error("The user row to be added doesn't have the same amount of columns as the current user item matrix")
+        if (!userRow || userRow.length != this.matrix[0].length) {
+            throw new Error("The row to be added doesn't have the same amount of columns as the other items in the matrix")
         } else if (typeof userRow[0] != "string") {
-            throw new Error("The user row to be added isn't in the correct format that should be ['user id', 0, 1, ...]")
-        } else if (this.userToRowNumberMap[userRow[0]]) {
-            throw new Error(`A row for the given userid: ${userRow[0]} already exists in the user item matrix. Can't add a second row for the same user id. `)
+            throw new Error("The row to be added isn't in the correct format that should be ['user id', 0, 1, ...]")
+        } else if (this.rowIdToRowNumberMap[userRow[0]]) {
+            throw new Error(`A row for the given id: ${userRow[0]} already exists in the user item matrix. Can't add a second row for the same user id. `)
         }
-        this.userToRowNumberMap[userRow[0]] = this.userItemMatrix.push(userRow) - 1
+        this.rowIdToRowNumberMap[userRow[0]] = this.matrix.push(userRow) - 1
     }
 
     /**
@@ -267,14 +317,26 @@ export default class KNNRecommender {
      * @param userId 
      * */
     public addNewEmptyUserToDataset(userId: string) {
-        let userArray = new Array<string | number>(this.userItemMatrix[0].length)
-        userArray[0] = userId
-        for (let i = 1; i < this.userItemMatrix[0].length; i++) {
+        this.addNewEmptyRowToDataset(userId)
+    }
+
+    /**
+     * Convenience method to add an empty item to data set with only item id.
+     * All the charasteristics are initialized with 0
+     * @param itemId
+     * */
+    public addNewEmptyItemAsRowToDataset(itemId: string) {
+        this.addNewEmptyRowToDataset(itemId)
+    }
+
+    private addNewEmptyRowToDataset(rowId: string) {
+        let userArray = new Array<string | number>(this.matrix[0].length)
+        userArray[0] = rowId
+        for (let i = 1; i < this.matrix[0].length; i++) {
             userArray[i] = 0
         }
         this.addNewUserToDataset(userArray)
     }
-
 
     /**
      * Add a new item to the user item matrix and initalize all user recommendations
@@ -285,9 +347,22 @@ export default class KNNRecommender {
      * @param itemId 
      */
     public addNewItemToDataset(itemId: string) {
-        this.itemIdToColumnNumberMap[itemId] = this.userItemMatrix[0].push(itemId) - 1
-        for (let i = 1; i < this.userItemMatrix.length; i++) {//initialize all user recommendations with zeros for the new item
-            this.userItemMatrix[i].push(0)
+        this.addNewColumnToDataset(itemId)
+    }
+
+    /**
+     * Add a new item charasteristic to the item-item charasteristic matrix and initalize all 
+     * items with value 0 for the new item charasteristic.
+     * @param charasteristic 
+     */
+    public addNewItemCharacteristicToDataset(charasteristic: string) {
+        this.addNewColumnToDataset(charasteristic)
+    }
+
+    private addNewColumnToDataset(columnId: string) {
+        this.columnIdToColumnNumberMap[columnId] = this.matrix[0].push(columnId) - 1
+        for (let i = 1; i < this.matrix.length; i++) {//initialize all recommendations with zeros for the new item
+            this.matrix[i].push(0)
         }
     }
 
@@ -300,31 +375,31 @@ export default class KNNRecommender {
      * @returns e.g. ['user 1', 1, 0, -1, 0]
      */
     public getAllRecommendationsForUserId(userId: string): Array<string | number> {
-        const rowNumber = this.userToRowNumberMap[userId]
+        const rowNumber = this.rowIdToRowNumberMap[userId]
         if (!rowNumber) {
             throw new Error(`Invalid or non initialized user id ${userId}`)
         }
-        return this.userItemMatrix[rowNumber]
+        return this.matrix[rowNumber]
     }
 
     /**
- * Try to generate the desired amount of new unique recommendations for a user
- * based on what similar users have liked.
- * The method starts with the most similar user and collects all the 
- * likings from him/her where the current user hasn't expressed their
- * preference yet. If the amount of desired recommendations hasn't been
- * fulfilled yet, it proceededs to the second most similar user and so on.
- * The method doesn't add same recommendation twice even if it would be 
- * recommended by several users. If you want to have these potential multi recommendations
- * included use the method generateNNewRecommendationsForUserId instead.
- * @param userId 
- * @param onlyUnique
- * @param amountOfDesiredNewRecommendations defaults to 1
- * @param amountOfDesiredNearestNeighboursToUse defaults to 3
- * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
- * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, 
- * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
- */
+     * Try to generate the desired amount of new unique recommendations for a user
+     * based on what similar users have liked.
+     * The method starts with the most similar user and collects all the 
+     * likings from him/her where the current user hasn't expressed their
+     * preference yet. If the amount of desired recommendations hasn't been
+     * fulfilled yet, it proceededs to the second most similar user and so on.
+     * The method doesn't add same recommendation twice even if it would be 
+     * recommended by several users. If you want to have these potential multi recommendations
+     * included use the method generateNNewRecommendationsForUserId instead.
+     * @param userId 
+     * @param onlyUnique
+     * @param amountOfDesiredNewRecommendations defaults to 1
+     * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+     * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
+     * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, 
+     * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
+     */
     private generateNNewRecommendationsForUserIdInternal(userId: string,
         onlyUnique: boolean,
         amountOfDesiredNewRecommendations: number = 1,
@@ -342,13 +417,13 @@ export default class KNNRecommender {
         } = {}
 
         for (let i = 0; i < userSimilarities.length; i++) {
-            const otherUsersRecommendations = this.getAllRecommendationsForUserId(userSimilarities[i].otherUserId)
+            const otherUsersRecommendations = this.getAllRecommendationsForUserId(userSimilarities[i].otherRowId)
             for (let j = 1; j < userRecommendations.length; j++) {
                 if ((!onlyUnique || !recommendationsAlreadyIncluded[j]) &&
                     otherUsersRecommendations[j] === 1 && userRecommendations[j] === 0) {//the other user has liked this item and the current user has neither liked/disliked it.
                     newRecommendations[newRecommendationCounter] = {
-                        itemId: <string>this.userItemMatrix[0][j],
-                        recommenderUserId: userSimilarities[i].otherUserId,
+                        itemId: <string>this.matrix[0][j],
+                        recommenderUserId: userSimilarities[i].otherRowId,
                         similarityWithRecommender: userSimilarities[i].similarity
                     }
                     newRecommendationCounter++
@@ -375,9 +450,9 @@ export default class KNNRecommender {
      * 
      * @returns return a promise that resolves to true when initalization is done.
      */
-    private calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMapInChunks(): Promise<boolean> {
+    private calculateDistancesInZeroOneMatrixAndCreateRowIdToRowNumberAndColumnIdToColumnNumberMapsInChunks(): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.chunkIntermediator(1, this.userItemMatrix.length, resolve, reject)
+            this.chunkIntermediator(1, this.matrix.length, resolve, reject)
         });
     }
 
@@ -398,7 +473,7 @@ export default class KNNRecommender {
         const CHUNK_SIZE = 3
         const rowsLenghtOrIPlusChunkSize = (startIndex + CHUNK_SIZE) > totalRows ? totalRows : (startIndex + CHUNK_SIZE)
         try {
-            this.calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startIndex, rowsLenghtOrIPlusChunkSize)
+            this.calculateDistancesInZeroOneMatrixAndCreateRowIdToRowNumberAndColumnIdToColumnNumberMaps(startIndex, rowsLenghtOrIPlusChunkSize)
         } catch (error) {
             reject(error)
             return;
@@ -415,64 +490,64 @@ export default class KNNRecommender {
     /**
      * This is a heavy (roughly: O(n^3) + O(n * log(n)) operation. 
      */
-    private calculateDistancesInZeroOneUserItemMatrixAndCreateUserToRowAndItemToColumnMap(startAtRow: number, endAtRow: number): void {
-        const rows = this.userItemMatrix.length
-        const columns = this.userItemMatrix[0].length
+    private calculateDistancesInZeroOneMatrixAndCreateRowIdToRowNumberAndColumnIdToColumnNumberMaps(startAtRow: number, endAtRow: number): void {
+        const rows = this.matrix.length
+        const columns = this.matrix[0].length
 
         let itemIdToColumnNumberMapInitiated = false
 
         for (let i = startAtRow; i < endAtRow; i++) {//first row is item names
-            let userToOtherUsersSimilarityList: Array<UserSimilarity> = Array(rows - 2)
-            let userToOtherUsersCounter = 0
-            //Go through all the rows to match the user with all the rest of the users
+            let rowToOtherRowsSimilarityList: Array<Similarity> = Array(rows - 2)
+            let rowToOtherRowsCounter = 0
+            //Go through all the rows to match the row with all the rest of the rows
             for (let i2 = 1; i2 < rows; i2++) {
-                if (i === i2) {//don't compare the user to themself
+                if (i === i2) {//don't compare the row to itself
                     continue
                 }
                 let similarRatings = 0
-                let ratingsDoneByEitherUser = 0
-                for (let j = 1; j < columns; j++) {//first column contains the user name, start with second
+                let ratingsDoneByEitherRow = 0
+                for (let j = 1; j < columns; j++) {//first column contains the row id's, start with second
                     if (!itemIdToColumnNumberMapInitiated) {
-                        this.itemIdToColumnNumberMap[<string>this.userItemMatrix[0][j]] = j
+                        this.columnIdToColumnNumberMap[<string>this.matrix[0][j]] = j
                     }
-                    if (this.userItemMatrix[i][j] !== -1 && this.userItemMatrix[i][j] !== 0
-                        && this.userItemMatrix[i][j] !== 1) {
-                        throw new RangeError(`Element in user item matrix was invalid, either not a` +
+                    if (this.matrix[i][j] !== -1 && this.matrix[i][j] !== 0
+                        && this.matrix[i][j] !== 1) {
+                        throw new RangeError(`Element in matrix was invalid, either not a` +
                             ` number at all or not a -1, 0, or 1. The invalid value  ` +
-                            `at index [${i}][${j}] is: ${this.userItemMatrix[i][j]}`)
-                    } else if (this.userItemMatrix[i][j] !== 0 && this.userItemMatrix[i][j] === this.userItemMatrix[i2][j]) {
+                            `at index [${i}][${j}] is: ${this.matrix[i][j]}`)
+                    } else if (this.matrix[i][j] !== 0 && this.matrix[i][j] === this.matrix[i2][j]) {
                         similarRatings++
-                        ratingsDoneByEitherUser++
-                    } else if (this.userItemMatrix[i][j] !== 0 || this.userItemMatrix[i2][j] !== 0) {
-                        ratingsDoneByEitherUser++
+                        ratingsDoneByEitherRow++
+                    } else if (this.matrix[i][j] !== 0 || this.matrix[i2][j] !== 0) {
+                        ratingsDoneByEitherRow++
                     }
                 }
                 itemIdToColumnNumberMapInitiated = true // initiate this only once on the first run
-                let jaccardSimilarity = ratingsDoneByEitherUser !== 0 ? similarRatings / ratingsDoneByEitherUser : 0
+                let jaccardSimilarity = ratingsDoneByEitherRow !== 0 ? similarRatings / ratingsDoneByEitherRow : 0
 
-                if (typeof this.userItemMatrix[i2][0] !== "string") {
-                    throw new TypeError(`Malformatted user item matrix. Element at` +
-                        `at index [${i2}][${0}] is not a string (describing a userid). ` +
-                        `The invalid element is: ${this.userItemMatrix[i2][0]}`)
+                if (typeof this.matrix[i2][0] !== "string") {
+                    throw new TypeError(`Malformatted matrix. Element at` +
+                        `at index [${i2}][${0}] is not a string (describing a user/item id). ` +
+                        `The invalid element is: ${this.matrix[i2][0]}`)
                 }
 
-                userToOtherUsersSimilarityList[userToOtherUsersCounter] = { otherUserId: <string>this.userItemMatrix[i2][0], similarity: jaccardSimilarity }
-                userToOtherUsersCounter++
+                rowToOtherRowsSimilarityList[rowToOtherRowsCounter] = { otherRowId: <string>this.matrix[i2][0], similarity: jaccardSimilarity }
+                rowToOtherRowsCounter++
             }
-            if (typeof this.userItemMatrix[i][0] !== "string") {
-                throw new TypeError(`Malformatted user item matrix. Element at` +
-                    `at index [${i}][${0}] is not a string (describing a userid). ` +
-                    `The invalid element is: ${this.userItemMatrix[i][0]}`)
-            } else if (this.userToRowNumberMap[this.userItemMatrix[i][0]]) {
-                throw new Error(`Malformatted user item matrix. The matrix contains two users with the same id: ${this.userItemMatrix[i][0]}`)
+            if (typeof this.matrix[i][0] !== "string") {
+                throw new TypeError(`Malformatted matrix. Element at` +
+                    `at index [${i}][${0}] is not a string (describing a user/item id). ` +
+                    `The invalid element is: ${this.matrix[i][0]}`)
+            } else if (this.rowIdToRowNumberMap[this.matrix[i][0]]) {
+                throw new Error(`Malformatted matrix. The matrix contains two rows with the same id: ${this.matrix[i][0]}`)
             }
 
-            this.userToRowNumberMap[this.userItemMatrix[i][0]] = i
-            this.userToUserSimilarityMap[this.userItemMatrix[i][0]] = this.sortUserToOtherUsersSimilarityListByUserToUserSimilarityDescending(userToOtherUsersSimilarityList)
+            this.rowIdToRowNumberMap[this.matrix[i][0]] = i
+            this.rowToRowSimilarityMap[this.matrix[i][0]] = this.sortRowToOtherRowsSimilarityListByRowToRowSimilarityDescending(rowToOtherRowsSimilarityList)
         }
     }
 
-    private sortUserToOtherUsersSimilarityListByUserToUserSimilarityDescending(userToOtherUsersSimilarityList: Array<UserSimilarity>): Array<UserSimilarity> {
+    private sortRowToOtherRowsSimilarityListByRowToRowSimilarityDescending(userToOtherUsersSimilarityList: Array<Similarity>): Array<Similarity> {
         return userToOtherUsersSimilarityList.sort((a, b) => (a.similarity > b.similarity) ? -1 : 1)
     }
 }

@@ -101,7 +101,7 @@ describe('basic test', () => {
         kNNRecommender.initializeRecommender().then(() => {
             const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
-            expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+            expect(userToOtherUsersArray[0].otherRowId).to.equal('user 2');
             expect(userToOtherUsersArray[0].similarity).to.equal(3 / 5);
             done()
         })
@@ -113,7 +113,7 @@ describe('basic test', () => {
 
         const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
-        expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+        expect(userToOtherUsersArray[0].otherRowId).to.equal('user 2');
         expect(userToOtherUsersArray[0].similarity).to.equal(3 / 5);
 
         expect(() => kNNRecommender.getNNearestNeighboursForUserId('user 2', 1)).to.throw()
@@ -153,6 +153,39 @@ describe('basic test', () => {
         expect(user1Recommendations2[1].itemId).to.equal('item 4');
     })
 
+    it('should work with step by step test for item to item-characteristics', () => {
+        const kNNRecommender = new KNNRecommender(null)
+
+        kNNRecommender.addNewItemCharacteristicToDataset('characteristic 1')
+        kNNRecommender.addNewItemCharacteristicToDataset('characteristic 2')
+        kNNRecommender.addNewEmptyItemAsRowToDataset('item 1')
+        kNNRecommender.addNewEmptyItemAsRowToDataset('item 2')
+        kNNRecommender.addNewEmptyItemAsRowToDataset('item 3')
+
+        kNNRecommender.addCharacteristicForItem('item 1', 'characteristic 1')
+        kNNRecommender.addCharacteristicForItem('item 1', 'characteristic 2')
+
+        kNNRecommender.addCharacteristicForItem('item 2', 'characteristic 1')
+
+        kNNRecommender.initializeRecommenderForItemId('item 2')
+
+        const similarItemsForItem2 = kNNRecommender.getNNearestNeighboursForItemId('item 2', 1)
+
+        //should print item 1
+        expect(similarItemsForItem2[0].otherRowId).to.equal('item 1');
+
+        kNNRecommender.addNewItemCharacteristicToDataset('characteristic 3')
+        kNNRecommender.addCharacteristicForItem('item 2', 'characteristic 3')
+
+        kNNRecommender.initializeRecommenderForItemId('item 1')
+
+        const similarItemsForItem1 = kNNRecommender.getNNearestNeighboursForItemId('item 1', 1)
+
+        //should print item 2
+        expect(similarItemsForItem1[0].otherRowId).to.equal('item 2');
+
+    })
+
 
     it('should initialize with an empty matrix when users added first', (done) => {
         const kNNRecommender = new KNNRecommender(null)
@@ -165,7 +198,7 @@ describe('basic test', () => {
 
             const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
-            expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+            expect(userToOtherUsersArray[0].otherRowId).to.equal('user 2');
             expect(userToOtherUsersArray[0].similarity).to.equal(0);
             done()
         })
@@ -186,7 +219,7 @@ describe('basic test', () => {
 
                 const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
-                expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+                expect(userToOtherUsersArray[0].otherRowId).to.equal('user 2');
                 expect(userToOtherUsersArray[0].similarity).to.equal(1);
                 done()
             })
@@ -202,7 +235,7 @@ describe('basic test', () => {
 
             const userToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)
 
-            expect(userToOtherUsersArray[0].otherUserId).to.equal('user 2');
+            expect(userToOtherUsersArray[0].otherRowId).to.equal('user 2');
             expect(userToOtherUsersArray[0].similarity).to.equal(0);
             done()
         })
@@ -213,23 +246,23 @@ describe('basic test', () => {
         kNNRecommender.initializeRecommender().then(() => {
             const user1ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1', 2)
 
-            expect(user1ToOtherUsersArray[0].otherUserId).to.equal('user 2');
+            expect(user1ToOtherUsersArray[0].otherRowId).to.equal('user 2');
             expect(user1ToOtherUsersArray[0].similarity).to.equal(3 / 5);
-            expect(user1ToOtherUsersArray[1].otherUserId).to.equal('user 3');
+            expect(user1ToOtherUsersArray[1].otherRowId).to.equal('user 3');
             expect(user1ToOtherUsersArray[1].similarity).to.equal(2 / 5);
 
             const user2ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 2')
 
-            expect(user2ToOtherUsersArray[0].otherUserId).to.equal('user 1');
+            expect(user2ToOtherUsersArray[0].otherRowId).to.equal('user 1');
             expect(user2ToOtherUsersArray[0].similarity).to.equal(3 / 5);
-            expect(user2ToOtherUsersArray[1].otherUserId).to.equal('user 3');
+            expect(user2ToOtherUsersArray[1].otherRowId).to.equal('user 3');
             expect(user2ToOtherUsersArray[1].similarity).to.equal(2 / 5);
 
             const user3ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 3')
 
-            expect(user3ToOtherUsersArray[0].otherUserId).to.equal('user 1');
+            expect(user3ToOtherUsersArray[0].otherRowId).to.equal('user 1');
             expect(user3ToOtherUsersArray[0].similarity).to.equal(2 / 5);
-            expect(user3ToOtherUsersArray[1].otherUserId).to.equal('user 2');
+            expect(user3ToOtherUsersArray[1].otherRowId).to.equal('user 2');
             expect(user3ToOtherUsersArray[1].similarity).to.equal(2 / 5);
             done()
         })
@@ -330,7 +363,7 @@ describe('basic test', () => {
 
             kNNRecommender.addLikeForUserToAnItem('user 1', 'item 2')
             kNNRecommender.addDislikeForUserToAnItem('user 1', 'item 3')
-            kNNRecommender.updateUserItemMatrixForUserId('user 1', 'item 4', -1)
+            kNNRecommender.updateMatrixForRowIdAndColumnId('user 1', 'item 4', -1)
 
             const userRecommendationsAfter = kNNRecommender.getAllRecommendationsForUserId('user 1')
             expect(userRecommendationsAfter[0]).to.equal('user 1');
