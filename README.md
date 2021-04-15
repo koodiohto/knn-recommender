@@ -37,7 +37,9 @@ npm install --save knn-recommender
 ```
 You can also [download the javascript source for knn-recommender.js](https://github.com/koodiohto/knn-recommender/blob/main/dist/knn-recommender.js) directly from this repository. Or you can  [download the minified version compiled for npm-distribution](https://github.com/koodiohto/knn-recommender/blob/main/distfornpmpublishing/knn-recommender.js) that should run in browsers and node-environment.
 
-# Basic usage
+# Basic usages
+
+## Basic usage for User-Item matrices
 
 If you have the User-Item matrix available, you can initialize the recommender for all users.
 ```js
@@ -83,6 +85,38 @@ const user1Recommendations = kNNRecommender.generateNNewUniqueRecommendationsFor
 console.log(`new recommendation for user 1 ${user1Recommendations[0].itemId}`)
 
 ```
+## Basic usage for Item - Item charasteristic matrices
+
+```js
+const kNNRecommender = new KNNRecommender(null)
+
+kNNRecommender.addNewItemCharacteristicToDataset('characteristic 1')
+kNNRecommender.addNewItemCharacteristicToDataset('characteristic 2')
+kNNRecommender.addNewEmptyItemAsRowToDataset('item 1')
+kNNRecommender.addNewEmptyItemAsRowToDataset('item 2')
+
+kNNRecommender.addCharacteristicForItem('item 1', 'characteristic 1')
+kNNRecommender.addCharacteristicForItem('item 1', 'characteristic 2')
+
+kNNRecommender.addCharacteristicForItem('item 2', 'characteristic 1')
+
+kNNRecommender.initializeRecommenderForItemId('item 2')
+
+const similarItemsForItem2 = kNNRecommender.getNNearestNeighboursForItemId('item 2', 1)
+
+//should print item 1
+console.log(`most similar item with item 2 is ${similarItemsForItem2[0].otherRowId}`)
+
+kNNRecommender.addNewItemCharacteristicToDataset('characteristic 3')
+kNNRecommender.addCharacteristicForItem('item 2', 'characteristic 3')
+
+kNNRecommender.initializeRecommenderForItemId('item 1')
+
+const similarItemsForItem1 = kNNRecommender.getNNearestNeighboursForItemId('item 1', 1)
+
+//should print item 2
+console.log(`most similar item with item 1 is ${similarItemsForItem1[0].otherRowId}`)
+```
 
 Sidenote:
 If you use node without babel, you have to import the module like this:
@@ -95,16 +129,18 @@ kNNRecommender.addNewItemToDataset('item 1')
 
 # API
 
+The api methods are described primarily for user item matrix, but there are similar convenience methods for item - item charasteristics matrices as well. You can see the usage of these methods in the item - item charasteristic matrix example above.
+
 Scroll to the right to see all the columns...
 
 Method             | Arguments          | Returns      | Description                      | Example  
 ------------------|---------------|---------------|-------------|------------  
-KNNRecommender | ```userItemMatrix: Array<Array<string or number>> or null ```| void | This constructor takes a X x Y user item matrix as its argument. X[0] column represents the user id's and Y[0] the item labels. The cells in the matrix are expected to contain either -1 (dislike), 0 (no rating given) or 1 (like). The matrix can be null and you can use the addNewItemToDataset anda addNewUserToDataset methods for initializing the matrix | ```const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]]) ```
+KNNRecommender | ```matrix: Array<Array<string or number>> or null ```| void | This constructor takes a X x Y user item matrix (or item - item charasteristic matrix) as its argument. X[0] column represents the user id's and Y[0] the item labels. The cells in the matrix are expected to contain either -1 (dislike), 0 (no rating given) or 1 (like). The matrix can be null and you can use the addNewItemToDataset anda addNewUserToDataset methods for initializing the matrix | ```const kNNRecommender = new KNNRecommender([['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4','item 5', 'item 6', 'item 7'], ['user 1', 1, -1, 0, 0, -1, 1, 0], ['user 2', 1, -1, 0, 1, -1, 0, 0]]) ```
 initializeRecommender | no arguments | ``` Promise<boolean> ``` | Initializes the recommender for all users based on the provided user item matrix so we can start asking recommendations from it. If you add new items or users to the matrix and want the updates to affect the recommendations, you need to run this initialization again. This initialization is a heavy (roughly: O(n^3) + O(n * log(n)) operation. The method returns a Promise that resolves to true when the initialization is completed successfully. | ```kNNRecommender.initializeRecommender().then(() => {... ```
 initializeRecommenderForUserId | ```userId: string ``` | void | (Re)-initialize the recommender only for one userId. This is significantly faster than initializing the recommender for all users, so you should use this method when possible. | ```kNNRecommender.initializeRecommenderForUserId('user 1')```
 generateNNewRecommendationsForUserId | ```userId: string, amountOfDesiredNewRecommendations: number = 1, amountOfDesiredNearestNeighboursToUse: number = 3 ``` | ``` Array<Recommendation> ``` | Try to generate the desired amount of new recommendations for a user based on what similar users have liked. The method starts with the most similar user and collects all the likings from him/her where the current user hasn't expressed their preference yet. If the amount of desired recommendations hasn't been fulfilled yet, it proceeds to the second most similar user and so on. The method might add the same recommendation twice if an item has been recommended by several similar users. If you want to have these potential multi recommendations excluded use the method generateNNewUniqueRecommendationsForUserId instead. Returns an array containing the recommendations or an empty array if no recommendations can be generated from the data e.g. ```[{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, {itemId: 'item 1', recommenderUserId: 'user 2', similarityWithRecommender: 0.4} {itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null] ``` | ```const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 3', 2, 3); console.log(`${userRecommendations[0].itemId} ${userRecommendations[0].recommenderUserId} {userRecommendations[0].similarityWithRecommender}`)```
 generateNNewUniqueRecommendationsForUserId | ```userId: string, amountOfDesiredNewRecommendations: number = 1, amountOfDesiredNearestNeighboursToUse: number = 3 ``` | ``` Array<Recommendation> ``` | Try to generate the desired amount of new recommendations for a user based on what similar users have liked. The method starts with the most similar user and collects all the likings from him/her where the current user hasn't expressed their preference yet. If the amount of desired recommendations hasn't been fulfilled yet, it proceeds to the second most similar user and so on. The method doesn't add the same recommendation twice even if it would be recommended by several users. If you want to have these potential multi recommendations included use the method generateNNewRecommendationsForUserId instead. Returns an array containing the recommendations or an empty array if no recommendations can be generated from the data e.g. ```[{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6}, itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null] ``` | ```const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', 2, 3); console.log(`${userRecommendations[0].itemId} ${userRecommendations[0].recommenderUserId} {userRecommendations[0].similarityWithRecommender}`)```
-getNNearestNeighboursForUserId | ```userId: string, amountOfDesiredNeighbours: number = -1 ``` | ``` Array<UserSimilarity> ``` | Returns a sorted list of the n most similar users to the given userId. The elements in the list contain objects in the form {otherUserId, similarity}. E.g. ```[{otherUserId: 'User 2', similarity: 0.53}, {otherUserId: 'User 3', similarity: 0.4}] ```| ```  const user1ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1')```
+getNNearestNeighboursForUserId | ```userId: string, amountOfDesiredNeighbours: number = -1 ``` | ``` Array<UserSimilarity> ``` | Returns a sorted list of the n most similar users to the given userId. The elements in the list contain objects in the form {otherRowId, similarity}. E.g. ```[{otherRowId: 'User 2', similarity: 0.53}, {otherRowId: 'User 3', similarity: 0.4}] ```| ```  const user1ToOtherUsersArray = kNNRecommender.getNNearestNeighboursForUserId('user 1')```
 getAllRecommendationsForUserId | ```userId: string ``` | ``` Array<string or number> ``` | Get all the recommendations for certain user id. You can use this method together with getNNearestNeighboursForUserId to manually generate recommendations for one user based on the recommendations of other users. Returns e.g. ```['user 1', 1, 0, -1, 0]``` | ```  const allUserRecommendations = kNNRecommender.getAllRecommendationsForUserId('user 1')```
 addLikeForUserToAnItem | ```userId: string, itemId: string ``` | void | Update the liking value for a certain user and item. NOTE: This method does not invoke an automatic recalculation of the user similarities. You need to tricker that manually if you wish by running initializeRecommender-method | ```kNNRecommender.addLikeForUserToAnItem('user 1', 'item 2')```
 addDislikeForUserToAnItem | ```userId: string, itemId: string ``` | void | Update the disliking value for a certain user and item. NOTE: This method does not invoke an automatic recalculation of the user similarities. You need to tricker that manually if you wish by running initializeRecommender-method | ```kNNRecommender.addDislikeForUserToAnItem('user 1', 'item 2')```
@@ -127,7 +163,7 @@ Matrix size (users x items)      | Initialization time
 50 x 1000 | 80ms
 50 x 10000 | 0.5s
 
-Adding more users raises the initialization times radically. So if you find a way to divide your users into clusters, you can reduce the amount of user rows needed for providing recommendations for a certain user and thus provide recommendations faster. Or you can initialize the recommender only for individual users.
+Adding more users (or items) raises the initialization times radically. So if you find a way to divide your users into clusters, you can reduce the amount of user rows needed for providing recommendations for a certain user and thus provide recommendations faster. Or you can initialize the recommender only for individual users.
 
 # Contact
 
