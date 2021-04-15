@@ -109,6 +109,8 @@ const similarItemsForItem2 = kNNRecommender.getNNearestNeighboursForItemId('item
 
 //should print item 1
 console.log(`most similar item with item 2 is ${similarItemsForItem2[0].otherRowId}`)
+//should print 0.5
+console.log(`similarity score between item1 and item 2 is ${similarItemsForItem2[0].similarity}`)
 
 kNNRecommender.addNewItemCharacteristicToDataset('characteristic 3')
 kNNRecommender.addCharacteristicForItem('item 2', 'characteristic 3')
