@@ -98,6 +98,9 @@ kNNRecommender.addNewEmptyItemAsRowToDataset('item 2')
 kNNRecommender.addCharacteristicForItem('item 1', 'characteristic 1')
 kNNRecommender.addCharacteristicForItem('item 1', 'characteristic 2')
 
+//you can also remove characteristics like this:
+//kNNRecommender.removeCharacteristicForItem('item 1', 'characteristic 2')
+
 kNNRecommender.addCharacteristicForItem('item 2', 'characteristic 1')
 
 kNNRecommender.initializeRecommenderForItemId('item 2')
