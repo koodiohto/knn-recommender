@@ -46,13 +46,6 @@ const malformattedUserItemMatrixWithTwoSameUserIds: any[][] = [
     ['user 1', 1, -1, 0, 1, -1, 0, 0]
 ]
 
-const malformattedDataInUserItemMatrix: any[][] = [
-    ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
-        'item 5', 'item 6', 'item 7'],
-    ['user 1', 1, 'fdf', 0, 0, -1, 1, 0],
-    ['user 2', 1, -1, 0, 1, -1, 0, 0],
-    ['user 3', 1, 0, 0, 1, 0, 1, 0]
-]
 
 const malformattedUserIdANumber: any[][] = [
     ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
@@ -78,22 +71,6 @@ const malformattedItemName: any[][] = [
     ['user 3', 1, 0, 0, 1, 0, 1, 0]
 ]
 
-
-const wrongSizeUserItemMatrix: any[][] = [
-    ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
-        'item 5', 'item 6', 'item 7'],
-    ['user 1', 1, 0, 0, -1, 1, 0],
-    ['user 2', 1, -1, 0, 1, -1, 0, 0],
-    ['user 3', 1, 0, 0, 1, 0, 1, 0]
-]
-
-const wrongSize2UserItemMatrix: any[][] = [
-    ['emptycorner', 'item 1', 'item 2', 'item 3', 'item 4',
-        'item 5', 'item 6', 'item 7'],
-    ['user 1', 1, 1, 0, 0, -1, 1, 0],
-    ['user 2', 1, 0, 1, -1, 0, 0],
-    ['user 3', 1, 0, 0, 1, 0, 1, 0]
-]
 
 describe('basic test', () => {
     it('should get the first similar user correctly', (done) => {
@@ -302,6 +279,23 @@ describe('basic test', () => {
         })
     })
 
+    it('should get new recommendations correctly for user exluding some', (done) => {
+        const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
+        kNNRecommender.initializeRecommender().then(() => {
+            const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', 3, 2, ['item 1'])
+
+            expect(userRecommendations[0].itemId).to.equal('item 6');
+            expect(userRecommendations[0].recommenderUserId).to.equal('user 1');
+            expect(userRecommendations[0].similarityWithRecommender).to.equal(2 / 5);
+            expect(userRecommendations[1]).to.equal(undefined);
+
+            const userRecommendations2 = kNNRecommender.generateNNewRecommendationsForUserId('user 3', 3, 2, ['item 1', 'item 6'])
+            expect(userRecommendations2[0]).to.equal(undefined);
+
+            done()
+        })
+    })
+
     it('should get 3 new (not unique) recommendations correctly for user', (done) => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
         kNNRecommender.initializeRecommender().then(() => {
@@ -466,16 +460,6 @@ describe('basic test', () => {
         expect(() => kNNRecommender.getNNearestNeighboursForUserId('user 1', 1)).to.throw()
     })
 
-    it('should fail gracefully with malformatted data in user item matrix', (done) => {
-        const kNNRecommender = new KNNRecommender(malformattedDataInUserItemMatrix)
-        kNNRecommender.initializeRecommender().then(() => {
-            done(new Error('Expected method to reject.'))
-        }).catch((err) => {
-            expect(true)
-            done();
-        })
-    })
-
     it('should fail gracefully with other than first user id being a number', (done) => {
         const kNNRecommender = new KNNRecommender(malformattedSecondUserIdANumber)
         kNNRecommender.initializeRecommender().then(() => {
@@ -490,23 +474,4 @@ describe('basic test', () => {
         expect(() => new KNNRecommender(malformattedItemName)).to.throw()
     })
 
-    it('should fail gracefully with wrong sized user item matrix', (done) => {
-        const kNNRecommender = new KNNRecommender(wrongSizeUserItemMatrix)
-        kNNRecommender.initializeRecommender().then(() => {
-            done(new Error('Expected method to reject.'))
-        }).catch((err) => {
-            expect(true)
-            done();
-        })
-    })
-
-    it('should fail gracefully with second wrong sized user item matrix', (done) => {
-        const kNNRecommender = new KNNRecommender(wrongSize2UserItemMatrix)
-        kNNRecommender.initializeRecommender().then(() => {
-            done(new Error('Expected method to reject.'))
-        }).catch((err) => {
-            expect(true)
-            done();
-        })
-    })
 })
