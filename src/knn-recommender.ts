@@ -205,12 +205,14 @@ export default class KNNRecommender {
        * {itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
        */
     public generateNNewRecommendationsForUserId(userId: string,
-        amountOfDesiredNewRecommendations: number = 1,
-        amountOfDesiredNearestNeighboursToUse: number = 3, excludingTheseItem: Array<string> = []): Array<Recommendation> {
+        { amountOfDesiredNewRecommendations = 1,
+            amountOfDesiredNearestNeighboursToUse = 3, excludingTheseItems = [] } = {}): Array<Recommendation> {
         this.checkInitiated()
-        return this.generateNNewRecommendationsForUserIdInternal(userId, false,
+        return this.generateNNewRecommendationsForUserIdInternal(userId, {
+            onlyUnique: false,
             amountOfDesiredNewRecommendations,
-            amountOfDesiredNearestNeighboursToUse, excludingTheseItem)
+            amountOfDesiredNearestNeighboursToUse, excludingTheseItems
+        })
     }
 
     /**
@@ -232,12 +234,14 @@ export default class KNNRecommender {
       * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
       */
     public generateNNewUniqueRecommendationsForUserId(userId: string,
-        amountOfDesiredNewRecommendations: number = 1,
-        amountOfDesiredNearestNeighboursToUse: number = 3, excludingTheseItem: Array<string> = []): Array<Recommendation> {
+        { amountOfDesiredNewRecommendations = 1,
+            amountOfDesiredNearestNeighboursToUse = 3, excludingTheseItems = [] } = {}): Array<Recommendation> {
         this.checkInitiated()
-        return this.generateNNewRecommendationsForUserIdInternal(userId, true,
+        return this.generateNNewRecommendationsForUserIdInternal(userId, {
+            onlyUnique: true,
             amountOfDesiredNewRecommendations,
-            amountOfDesiredNearestNeighboursToUse, excludingTheseItem)
+            amountOfDesiredNearestNeighboursToUse, excludingTheseItems
+        })
     }
 
     /**
@@ -403,10 +407,10 @@ export default class KNNRecommender {
      * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
      */
     private generateNNewRecommendationsForUserIdInternal(userId: string,
-        onlyUnique: boolean,
-        amountOfDesiredNewRecommendations: number = 1,
-        amountOfDesiredNearestNeighboursToUse: number = 3,
-        excludingTheseItems: Array<string> = []
+        { onlyUnique = false,
+            amountOfDesiredNewRecommendations = 1,
+            amountOfDesiredNearestNeighboursToUse = 3,
+            excludingTheseItems = [] } = {}
     ): Array<Recommendation> {
         const userRecommendations = this.getAllRecommendationsForUserId(userId)
         const userSimilarities = this.getNNearestNeighboursForUserId(userId, amountOfDesiredNearestNeighboursToUse)
@@ -424,7 +428,7 @@ export default class KNNRecommender {
             for (let j = 1; j < userRecommendations.length; j++) {
                 if ((!onlyUnique || !recommendationsAlreadyIncluded[j]) &&
                     otherUsersRecommendations[j] === 1 && userRecommendations[j] === 0 &&
-                    !excludingTheseItems.includes(<string>this.matrix[0][j])) {//the other user has liked this item and the current user has neither liked/disliked it.
+                    !excludingTheseItems.includes(<never>this.matrix[0][j])) {//the other user has liked this item and the current user has neither liked/disliked it.
                     newRecommendations[newRecommendationCounter] = {
                         itemId: <string>this.matrix[0][j],
                         recommenderUserId: userSimilarities[i].otherRowId,

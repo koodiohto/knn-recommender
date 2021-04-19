@@ -109,7 +109,7 @@ describe('basic test', () => {
 
         kNNRecommender.initializeRecommenderForUserId('user 2')
 
-        const user2Recommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 1)
+        const user2Recommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2')
 
         expect(user2Recommendations[0].itemId).to.equal('item 2');
 
@@ -118,14 +118,14 @@ describe('basic test', () => {
 
         kNNRecommender.initializeRecommenderForUserId('user 1')
 
-        const user1Recommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 1', 1)
+        const user1Recommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 1', { amountOfDesiredNewRecommendations: 1 })
 
         expect(user1Recommendations[0].itemId).to.equal('item 3');
 
         kNNRecommender.addNewItemToDataset('item 4')
         kNNRecommender.addLikeForUserToAnItem('user 2', 'item 4')
         kNNRecommender.initializeRecommenderForUserId('user 1')
-        const user1Recommendations2 = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 1', 2)
+        const user1Recommendations2 = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 1', { amountOfDesiredNewRecommendations: 2 })
 
         expect(user1Recommendations2[1].itemId).to.equal('item 4');
     })
@@ -262,7 +262,7 @@ describe('basic test', () => {
     it('should get 3 new unique recommendations correctly for user', (done) => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
         kNNRecommender.initializeRecommender().then(() => {
-            const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', 3, 2)
+            const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', { amountOfDesiredNewRecommendations: 3, amountOfDesiredNearestNeighboursToUse: 2 })
 
             expect(userRecommendations[0].itemId).to.equal('item 1');
             expect(userRecommendations[0].recommenderUserId).to.equal('user 2');
@@ -272,7 +272,7 @@ describe('basic test', () => {
             expect(userRecommendations[1].similarityWithRecommender).to.equal(2 / 5);
             expect(userRecommendations[2]).to.equal(undefined);
 
-            const userRecommendations2 = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', 40, 20)
+            const userRecommendations2 = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 2', { amountOfDesiredNewRecommendations: 40, amountOfDesiredNearestNeighboursToUse: 20 })
             expect(userRecommendations2[0].itemId).to.equal('item 6');
             expect(userRecommendations2[1]).to.equal(undefined);
             done()
@@ -282,14 +282,14 @@ describe('basic test', () => {
     it('should get new recommendations correctly for user exluding some', (done) => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
         kNNRecommender.initializeRecommender().then(() => {
-            const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', 3, 2, ['item 1'])
+            const userRecommendations = kNNRecommender.generateNNewUniqueRecommendationsForUserId('user 3', { amountOfDesiredNewRecommendations: 3, amountOfDesiredNearestNeighboursToUse: 2, excludingTheseItems: ['item 1'] })
 
             expect(userRecommendations[0].itemId).to.equal('item 6');
             expect(userRecommendations[0].recommenderUserId).to.equal('user 1');
             expect(userRecommendations[0].similarityWithRecommender).to.equal(2 / 5);
             expect(userRecommendations[1]).to.equal(undefined);
 
-            const userRecommendations2 = kNNRecommender.generateNNewRecommendationsForUserId('user 3', 3, 2, ['item 1', 'item 6'])
+            const userRecommendations2 = kNNRecommender.generateNNewRecommendationsForUserId('user 3', { amountOfDesiredNewRecommendations: 3, amountOfDesiredNearestNeighboursToUse: 2, excludingTheseItems: ['item 1', 'item 6'] })
             expect(userRecommendations2[0]).to.equal(undefined);
 
             done()
@@ -299,7 +299,7 @@ describe('basic test', () => {
     it('should get 3 new (not unique) recommendations correctly for user', (done) => {
         const kNNRecommender = new KNNRecommender(threeUserItemMatrixForFindingRecommendations)
         kNNRecommender.initializeRecommender().then(() => {
-            const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 3', 3, 2)
+            const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 3', { amountOfDesiredNewRecommendations: 3, amountOfDesiredNearestNeighboursToUse: 2 })
 
             expect(userRecommendations[0].itemId).to.equal('item 1');
             expect(userRecommendations[0].recommenderUserId).to.equal('user 2');
@@ -317,10 +317,10 @@ describe('basic test', () => {
     it('should get new recommendations correctly for over 10 sized user matrix', (done) => {
         const kNNRecommender = new KNNRecommender(generateABigMatrix(15, 15))
         kNNRecommender.initializeRecommender().then(() => {
-            const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 9', 2, 5)
-            const userRecommendations2 = kNNRecommender.generateNNewRecommendationsForUserId('user 10', 2, 5)
-            const userRecommendations3 = kNNRecommender.generateNNewRecommendationsForUserId('user 11', 2, 5)
-            const userRecommendations4 = kNNRecommender.generateNNewRecommendationsForUserId('user 15', 2, 5)
+            const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 9', { amountOfDesiredNewRecommendations: 2, amountOfDesiredNearestNeighboursToUse: 5 })
+            const userRecommendations2 = kNNRecommender.generateNNewRecommendationsForUserId('user 10', { amountOfDesiredNewRecommendations: 2, amountOfDesiredNearestNeighboursToUse: 5 })
+            const userRecommendations3 = kNNRecommender.generateNNewRecommendationsForUserId('user 11', { amountOfDesiredNewRecommendations: 2, amountOfDesiredNearestNeighboursToUse: 5 })
+            const userRecommendations4 = kNNRecommender.generateNNewRecommendationsForUserId('user 15', { amountOfDesiredNewRecommendations: 2, amountOfDesiredNearestNeighboursToUse: 5 })
 
             expect(userRecommendations[0].itemId).not.to.equal(undefined);
             expect(userRecommendations[0].recommenderUserId).not.to.equal(undefined);
@@ -420,7 +420,7 @@ describe('basic test', () => {
             expect(timeDif).to.be.least(1000);
 
             const timeStampBefore2 = new Date()
-            const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 50', 2, 20)
+            const userRecommendations = kNNRecommender.generateNNewRecommendationsForUserId('user 50', { amountOfDesiredNewRecommendations: 2, amountOfDesiredNearestNeighboursToUse: 20 })
             const timeStampAfter2 = new Date()
 
             expect((timeStampAfter2.getTime() - timeStampBefore2.getTime())).to.be.lessThan(10);
