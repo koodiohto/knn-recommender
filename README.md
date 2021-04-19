@@ -162,11 +162,11 @@ Initialization times with different size matrices were as listed here:
 
 Matrix size (users x items)      | Initialization time
 ------------------|---------------
-100 x 100 | 40ms 
-500 x 500 | 2.8s 
-1000 x 1000 | 23s
-1000 x 50 | 1.2s
-50 x 1000 | 80ms
+100 x 100 | 70ms 
+500 x 500 | 2.2s 
+1000 x 1000 | 16s
+1000 x 50 | 1.8s
+50 x 1000 | 75ms
 50 x 10000 | 0.5s
 
 Adding more users (or items) raises the initialization times radically. So if you find a way to divide your users into clusters, you can reduce the amount of user rows needed for providing recommendations for a certain user and thus provide recommendations faster. Or you can initialize the recommender only for individual users.
