@@ -51,7 +51,6 @@ export default class KNNRecommender {
         this.columnIdToColumnNumberMap = {};
         this.initialized = false;
         if (!matrix) { //allow initialization with and empty matrix to be filled later with addItems and addUsers methods.
-            console.warn("Warning: Initializing knn-recommender with an empty user item matrix");
             this.matrix = new Array(new Array());
             this.matrix[0].push('emptycorner');
         }
@@ -160,14 +159,19 @@ export default class KNNRecommender {
        * @param userId
        * @param amountOfDesiredNewRecommendations defaults to 1
        * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+       * @param excludingTheseItems exlude these items from the recommendations
        * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
        * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
        * {itemId: 'item 1', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}
        * {itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
        */
-    generateNNewRecommendationsForUserId(userId, amountOfDesiredNewRecommendations = 1, amountOfDesiredNearestNeighboursToUse = 3) {
+    generateNNewRecommendationsForUserId(userId, { amountOfDesiredNewRecommendations = 1, amountOfDesiredNearestNeighboursToUse = 3, excludingTheseItems = [] } = {}) {
         this.checkInitiated();
-        return this.generateNNewRecommendationsForUserIdInternal(userId, false, amountOfDesiredNewRecommendations, amountOfDesiredNearestNeighboursToUse);
+        return this.generateNNewRecommendationsForUserIdInternal(userId, {
+            onlyUnique: false,
+            amountOfDesiredNewRecommendations,
+            amountOfDesiredNearestNeighboursToUse, excludingTheseItems
+        });
     }
     /**
       * Try to generate the desired amount of new unique recommendations for a user
@@ -182,13 +186,18 @@ export default class KNNRecommender {
       * @param userId
       * @param amountOfDesiredNewRecommendations defaults to 1
       * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+      * @param excludingTheseItems exlude these items from the recommendations
       * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
       * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
       * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
       */
-    generateNNewUniqueRecommendationsForUserId(userId, amountOfDesiredNewRecommendations = 1, amountOfDesiredNearestNeighboursToUse = 3) {
+    generateNNewUniqueRecommendationsForUserId(userId, { amountOfDesiredNewRecommendations = 1, amountOfDesiredNearestNeighboursToUse = 3, excludingTheseItems = [] } = {}) {
         this.checkInitiated();
-        return this.generateNNewRecommendationsForUserIdInternal(userId, true, amountOfDesiredNewRecommendations, amountOfDesiredNearestNeighboursToUse);
+        return this.generateNNewRecommendationsForUserIdInternal(userId, {
+            onlyUnique: true,
+            amountOfDesiredNewRecommendations,
+            amountOfDesiredNearestNeighboursToUse, excludingTheseItems
+        });
     }
     /**
      * Update the liking value for a certain user and item.
@@ -336,11 +345,12 @@ export default class KNNRecommender {
      * @param onlyUnique
      * @param amountOfDesiredNewRecommendations defaults to 1
      * @param amountOfDesiredNearestNeighboursToUse defaults to 3
+     * @param excludingTheseItems exlude these items from the recommendations
      * @returns An array containing the recommendations or an empty array if no recommendations can be generated from the data
      * e.g. [{itemId: 'item 1', recommenderUserId: 'user 3', similarityWithRecommender: 0.6},
      * itemId: 'item 3', recommenderUserId: 'user 2', similarityWithRecommender: 0.4}, null]
      */
-    generateNNewRecommendationsForUserIdInternal(userId, onlyUnique, amountOfDesiredNewRecommendations = 1, amountOfDesiredNearestNeighboursToUse = 3) {
+    generateNNewRecommendationsForUserIdInternal(userId, { onlyUnique = false, amountOfDesiredNewRecommendations = 1, amountOfDesiredNearestNeighboursToUse = 3, excludingTheseItems = [] } = {}) {
         const userRecommendations = this.getAllRecommendationsForUserId(userId);
         const userSimilarities = this.getNNearestNeighboursForUserId(userId, amountOfDesiredNearestNeighboursToUse);
         let newRecommendations = new Array(amountOfDesiredNewRecommendations);
@@ -351,7 +361,8 @@ export default class KNNRecommender {
             const otherUsersRecommendations = this.getAllRecommendationsForUserId(userSimilarities[i].otherRowId);
             for (let j = 1; j < userRecommendations.length; j++) {
                 if ((!onlyUnique || !recommendationsAlreadyIncluded[j]) &&
-                    otherUsersRecommendations[j] === 1 && userRecommendations[j] === 0) { //the other user has liked this item and the current user has neither liked/disliked it.
+                    otherUsersRecommendations[j] === 1 && userRecommendations[j] === 0 &&
+                    !excludingTheseItems.includes(this.matrix[0][j])) { //the other user has liked this item and the current user has neither liked/disliked it.
                     newRecommendations[newRecommendationCounter] = {
                         itemId: this.matrix[0][j],
                         recommenderUserId: userSimilarities[i].otherRowId,
@@ -435,17 +446,12 @@ export default class KNNRecommender {
                     if (!itemIdToColumnNumberMapInitiated) {
                         this.columnIdToColumnNumberMap[this.matrix[0][j]] = j;
                     }
-                    if (this.matrix[i][j] !== -1 && this.matrix[i][j] !== 0
-                        && this.matrix[i][j] !== 1) {
-                        throw new RangeError(`Element in matrix was invalid, either not a` +
-                            ` number at all or not a -1, 0, or 1. The invalid value  ` +
-                            `at index [${i}][${j}] is: ${this.matrix[i][j]}`);
-                    }
-                    else if (this.matrix[i][j] !== 0 && this.matrix[i][j] === this.matrix[i2][j]) {
+                    if (this.matrix[i][j] !== undefined && this.matrix[i][j] !== 0 &&
+                        this.matrix[i][j] === this.matrix[i2][j]) {
                         similarRatings++;
                         ratingsDoneByEitherRow++;
                     }
-                    else if (this.matrix[i][j] !== 0 || this.matrix[i2][j] !== 0) {
+                    else if (this.matrix[i][j] !== undefined && this.matrix[i2][j] !== undefined && (this.matrix[i][j] !== 0 || this.matrix[i2][j] !== 0)) {
                         ratingsDoneByEitherRow++;
                     }
                 }
