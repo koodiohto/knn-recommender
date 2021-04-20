@@ -130,7 +130,7 @@ export default class KNNRecommender {
     }
 
     private initializeRecommenderForRowId(rowId: string) {
-        this.rowIdToRowNumberMap[rowId] = 0 //reinitialize this, we are counting on javascript intepretating 0 as false in our checks..A bit risky.
+        this.rowIdToRowNumberMap[rowId] = undefined
         for (let i = 0; i < this.matrix.length; i++) {
             if (this.matrix[i][0] === rowId) {
                 this.calculateDistancesInZeroOneMatrixAndCreateRowIdToRowNumberAndColumnIdToColumnNumberMaps(i, i + 1)
