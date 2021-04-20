@@ -175,6 +175,10 @@ Adding more users (or items) raises the initialization times radically. So if yo
 
 [Ohto Rainio](https://www.linkedin.com/in/ohtorainio/)
 
+# Issues and feature requests
+
+[Report an issue or feature request](https://github.com/koodiohto/knn-recommender/issues/new)
+
 # Licence
 
 MIT
